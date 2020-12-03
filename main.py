@@ -1,20 +1,20 @@
+# -*- coding: utf-8 -*-
+# Python 3.8.6
+
+
 from telebot import TeleBot, types
 from settings import TOKEN
 import peewee
+from sqlalchemy import *
 
 bot = TeleBot(TOKEN)
 
 
-@bot.message_handler(commands=['none'])
-def start(message):
-    print(message.__dir__())
-    print(message.chat)
-    print(message.from_user)
-    bot.send_message(message.chat.id, 'Привет!\nДобавьте информацию о себе.\nМы рассылаем информацию каждую пятницу.')
-
-
 @bot.message_handler(commands=['start'])
 def buttons_inline(message):
+    """
+    Функция инициирует бота и добавляет кнопки с выбором поля для заполнения информации.
+    """
     markup = types.InlineKeyboardMarkup(row_width=1)
     get_photo = types.InlineKeyboardButton(text='Фото', callback_data='add_photo')
     get_name = types.InlineKeyboardButton(text='Имя и Фамилия', callback_data='add_name')
@@ -25,11 +25,15 @@ def buttons_inline(message):
     markup.add(get_photo, get_name, get_company, get_interests, get_usefulness)
 
     start_message = 'Привет!\nДобавьте информацию о себе.\nМы рассылаем информацию каждую пятницу.'
-    bot.send_message(message.chat.id, start_message, reply_markup=markup)
+    msg = bot.send_message(message.chat.id, start_message, reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle(call):
+    """
+    Функция обрабатывает события в связи с нажатием на кнопку
+    """
+    bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
     if call.data == 'add_photo':
         text = 'Загрузите свое фото, чтобы люди знали, как вы выглядите. ' \
                'Можно прислать уже сделанное фото, но я рекомендую сделать селфи прямо сейчас. ' \
@@ -38,7 +42,6 @@ def handle(call):
         msg = bot.send_message(call.message.chat.id, text)
         bot.register_next_step_handler(msg, get_photo_from_user)
 
-
     elif call.data == 'add_name':
         text = 'Как вас представлять другим участникам? ' \
                f'В вашем профиле указано, что ваше имя - {call.from_user.username} ' \
@@ -46,14 +49,13 @@ def handle(call):
         msg = bot.send_message(call.message.chat.id, text)
         bot.register_next_step_handler(msg, get_name_from_user)
 
-
     elif call.data == 'add_company':
         text = 'Где и кем вы работаете? Это поможет людям понять, чем вы можете быть интересны. ' \
                'Пришлите мне, пожалуйста, название компании и вашу должность. ' \
                'Например, "Директор в "ООО Палехче".'
         msg = bot.send_message(call.message.chat.id, text)
-        bot.register_next_step_handler(msg, get_company_from_user)
 
+        bot.register_next_step_handler(msg, get_company_from_user)
 
     elif call.data == 'add_interests':
         text = 'О каких темах вам было бы интересно поговорить? ' \
@@ -62,12 +64,10 @@ def handle(call):
         msg = bot.send_message(call.message.chat.id, text)
         bot.register_next_step_handler(msg, get_interests_from_user)
 
-
     elif call.data == 'add_usefulness':
         text = 'В каких темах вы разбираетесь? Например, "умею пасти котов, инвестирую, развожу сурков".'
         msg = bot.send_message(call.message.chat.id, text)
         bot.register_next_step_handler(msg, get_usefulness_from_user)
-    bot.clear_step_handler()
 
 
 def get_photo_from_user(message):
@@ -76,19 +76,17 @@ def get_photo_from_user(message):
 
 def get_name_from_user(message):
     name = message.text
-    bot.clear_step_handler(name)
     print('name:', name)
 
 
 def get_company_from_user(message):
+    print('point3')
     company = message.text
-    bot.clear_step_handler(company)
     print('company:', company)
 
 
 def get_interests_from_user(message):
     interests = message.text
-
     print('interests:', interests)
 
 
