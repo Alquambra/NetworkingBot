@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
+# Python 3.8.6
+
 from sqlalchemy import create_engine
 
 
-
 TOKEN = '1431183102:AAF95F0wUZovGBGsgg4tePQzbw69Fef0d6o'
-engine = create_engine('postgresql://postgres:root@localhost:5555/alchemy', echo=False)
+engine = create_engine('sqlite:///netw.db', echo=False)
