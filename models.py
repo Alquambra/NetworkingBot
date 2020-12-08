@@ -138,6 +138,15 @@ def unsubscribe(telegram_id):
     session.close()
 
 
+def subscribed(telegram_id):
+    try:
+        u = session.query(User).filter_by(telegram_id=telegram_id).first().subscribed
+        return u
+    except Exception as e:
+        print(e)
+    session.close()
+
+
 def get_user_info(telegram_id):
     try:
         u = session.query(User).filter_by(telegram_id=telegram_id).first()

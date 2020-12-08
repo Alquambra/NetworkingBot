@@ -5,7 +5,7 @@ import time
 from telebot import types, AsyncTeleBot
 from settings import TOKEN
 from models import create_user_in_db, change_photo, change_name, change_company, change_interests, change_usefulness, \
-    subscribe, unsubscribe, get_user_info, check_fields_filled, create_pairs, get_telegram_id, create_meeting
+    subscribe, unsubscribe, subscribed, get_user_info, check_fields_filled, create_pairs, get_telegram_id, create_meeting
 import schedule
 
 bot = AsyncTeleBot(TOKEN)
@@ -239,7 +239,9 @@ def subscribe_or_not(call):
 
 
 def send_remind(call):
-    bot.send_message(chat_id=call.from_user.id, text='Уже середина недели, напишите своему партнеру, если вдруг забыли')
+    if subscribed(telegram_id=call.from_user.id):
+        bot.send_message(chat_id=call.from_user.id,
+                         text='Уже середина недели, напишите своему партнеру, если вдруг забыли')
 
 
 def send():
@@ -247,10 +249,11 @@ def send():
     print(pairs)
     for pair in pairs:
         print(pair[0], pair[1])
-        try:
-            telegram_id_0, telegram_id_1 = get_telegram_id(pair[0]), get_telegram_id(pair[1])
-            model_0, model_1 = get_user_info(telegram_id=telegram_id_0), get_user_info(telegram_id=telegram_id_1)
 
+        telegram_id_0, telegram_id_1 = get_telegram_id(pair[0]), get_telegram_id(pair[1])
+        print(telegram_id_0, telegram_id_1)
+        model_0, model_1 = get_user_info(telegram_id=telegram_id_0), get_user_info(telegram_id=telegram_id_1)
+        try:
             bot.send_message(chat_id=telegram_id_0, text='Привет!\nВаша пара на эту неделю:')
             time.sleep(0.5)
             bot.send_photo(chat_id=telegram_id_0, photo=model_1.photo)
@@ -258,8 +261,12 @@ def send():
             bot.send_message(chat_id=telegram_id_0, text=f'{model_1.name}, {model_1.company}\n'
                                                          f'Могу быть полезен: {model_1.usefulness}\n'
                                                          f'Я ищу: {model_1.interests}')
-            create_meeting(user_telegram_id=telegram_id_0, partner_telegram_id=telegram_id_1)
+            # create_meeting(user_telegram_id=telegram_id_0, partner_telegram_id=telegram_id_1)
+        except Exception as e:
+            print("Не получилось отправить сообщение 1", e)
 
+        try:
+            print(model_0)
             bot.send_message(chat_id=telegram_id_1, text='Привет!\nВаша пара на эту неделю:')
             time.sleep(0.5)
             bot.send_photo(chat_id=telegram_id_1, photo=model_0.photo)
@@ -267,9 +274,9 @@ def send():
             bot.send_message(chat_id=telegram_id_1, text=f'{model_0.name}, {model_0.company}\n'
                                                          f'Могу быть полезен: {model_0.usefulness}\n'
                                                          f'Я ищу: {model_0.interests}')
-            create_meeting(user_telegram_id=telegram_id_1, partner_telegram_id=telegram_id_0)
+            # create_meeting(user_telegram_id=telegram_id_1, partner_telegram_id=telegram_id_0)
         except Exception as e:
-            print(e)
+            print('Не получилоь отправить сообщение 2', e)
         time.sleep(3)
 
 
