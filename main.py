@@ -2,10 +2,10 @@
 # Python 3.8.6
 import time
 
-from telebot import TeleBot, types, AsyncTeleBot
+from telebot import types, AsyncTeleBot
 from settings import TOKEN
 from models import create_user_in_db, change_photo, change_name, change_company, change_interests, change_usefulness, \
-    subscribe, get_user_info, check_fields_filled, create_pairs, get_telegram_id
+    subscribe, unsubscribe, get_user_info, check_fields_filled, create_pairs, get_telegram_id, create_meeting
 import schedule
 
 bot = AsyncTeleBot(TOKEN)
@@ -64,7 +64,6 @@ def user_info(message):
 
 @bot.callback_query_handler(func=lambda call: call.data in ['add_photo', 'add_name', 'add_company',
                                                             'add_interests', 'add_usefulness'])
-# @bot.callback_query_handler(func=lambda call: call.data == 'add_photo')
 def handle(call):
     """
     Функция обрабатывает события в связи с нажатием на кнопку
@@ -72,8 +71,7 @@ def handle(call):
     bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
     if call.data == 'add_photo':
         bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
-
-        profile_photos = bot.get_user_profile_photos(user_id=call.from_user.id).photos
+        profile_photos = bot.get_user_profile_photos(user_id=call.from_user.id, limit=1).wait().photos
         if profile_photos:
             markup = types.InlineKeyboardMarkup(row_width=2)
             take_from_profile = types.InlineKeyboardButton(text='Из профиля', callback_data='photo_from_profile')
@@ -90,7 +88,6 @@ def handle(call):
             bot.register_next_step_handler(msg, get_photo_from_user)
     elif call.data == 'add_name':
         bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
-
         markup = types.InlineKeyboardMarkup(row_width=2)
         take_from_profile = types.InlineKeyboardButton(text='Оставить имя', callback_data='name_from_profile')
         load_by_myself = types.InlineKeyboardButton(text='Изменить', callback_data='edit_name')
@@ -98,8 +95,7 @@ def handle(call):
         text = 'Как вас представлять другим участникам? ' \
                f'В вашем профиле указано, что ваше имя - {call.from_user.username} ' \
                'Я могу использовать его. Или пришлите мне свое имя текстом. '
-        msg = bot.send_message(chat_id=call.message.chat.id, text=text, reply_markup=markup)
-
+        msg = bot.send_message(chat_id=call.message.chat.id, text=text, reply_markup=markup).wait()
         bot.register_next_step_handler(msg, get_name_from_user)
     elif call.data == 'add_company':
         bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
@@ -107,7 +103,7 @@ def handle(call):
         text = 'Где и кем вы работаете? Это поможет людям понять, чем вы можете быть интересны. ' \
                'Пришлите мне, пожалуйста, название компании и вашу должность. ' \
                'Например, "Директор в "ООО Палехче".'
-        msg = bot.send_message(call.message.chat.id, text)
+        msg = bot.send_message(call.message.chat.id, text).wait()
         bot.register_next_step_handler(msg, get_company_from_user)
     elif call.data == 'add_interests':
         bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
@@ -115,13 +111,13 @@ def handle(call):
         text = 'О каких темах вам было бы интересно поговорить? ' \
                'Например, "инвестиции, советы по воспитанию детей, ' \
                'возможна ли медицина в условиях невесомости".'
-        msg = bot.send_message(call.message.chat.id, text)
+        msg = bot.send_message(call.message.chat.id, text).wait()
         bot.register_next_step_handler(msg, get_interests_from_user)
     elif call.data == 'add_usefulness':
         bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
 
         text = 'В каких темах вы разбираетесь? Например, "умею пасти котов, инвестирую, развожу сурков".'
-        msg = bot.send_message(call.message.chat.id, text)
+        msg = bot.send_message(call.message.chat.id, text).wait()
         bot.register_next_step_handler(msg, get_usefulness_from_user)
     bot.register_next_step_handler(message=call.message, callback=buttons_inline)
 
@@ -129,9 +125,9 @@ def handle(call):
 @bot.callback_query_handler(func=lambda call: call.data == 'photo_from_profile')
 def from_profile(call):
     bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
-    profile_photos = bot.get_user_profile_photos(user_id=call.from_user.id).photos
-    avatar = bot.get_file(profile_photos[0][0].file_id)
-    downloaded = bot.download_file(avatar.file_path)
+    profile_photos = bot.get_user_profile_photos(user_id=call.from_user.id).wait().photos
+    avatar = bot.get_file(profile_photos[0][0].file_id).wait()
+    downloaded = bot.download_file(avatar.file_path).wait()
     change_photo(telegram_id=call.from_user.id, photo=downloaded)
     # bot.register_next_step_handler(message=call.message, callback=buttons_inline)
 
@@ -158,7 +154,7 @@ def name_from_profile(call):
 def edit_name(call):
     bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
     text = 'Введите свое имя.'
-    msg = bot.send_message(call.message.chat.id, text)
+    msg = bot.send_message(call.message.chat.id, text).wait()
     bot.register_next_step_handler(msg, get_name_from_user)
     # bot.register_next_step_handler(message=call.message, callback=buttons_inline)
 
@@ -173,8 +169,10 @@ def get_photo_from_user(message):
 
 
 def get_name_from_user(message):
+    print('user_name')
     if message.content_type == 'text':
         user_name = message.text
+
         change_name(telegram_id=message.from_user.id, name=user_name)
     else:
         bot.send_message(message.chat.id, 'Пришлите текст')
@@ -206,27 +204,52 @@ def get_usefulness_from_user(message):
 
 @bot.callback_query_handler(func=lambda call: call.data == 'participate_netw')
 def clicked(call):
-    subscribe(call.from_user.id)
     bot.send_message(chat_id=call.from_user.id, text='Вы учавствуете')
-    # while True:
-        # schedule.every().friday.at('14:00').do(send, call.message)
-    schedule.every().second.do(send, call.message)
+
+    schedule.every().minutes.at(':15').do(send_markup_yes_no, call)
+    time.sleep(5)
+    schedule.every().minutes.at(':30').do(send)
+    time.sleep(5)
+    schedule.every().minutes.at(':45').do(send_remind, call)
     while True:
-        # schedule.every().second.do(send, call.message)
         schedule.run_pending()
         time.sleep(1)
 
 
-def send(message):
+def send_markup_yes_no(call):
+    bot.send_message(chat_id=call.from_user.id, text='Привет!\nНаступил день подбора новых собеседников.')
+    markup = types.InlineKeyboardMarkup(row_width=2)
+    yes = types.InlineKeyboardButton(text='Да', callback_data='yes')
+    no = types.InlineKeyboardButton(text='Нет', callback_data='no')
+    markup.add(yes, no)
+    time.sleep(0.5)
+    bot.send_message(chat_id=call.from_user.id, text='Вас включать в список подбора на завтра?', reply_markup=markup)
+    time.sleep(0.5)
+    bot.send_message(chat_id=call.from_user.id, text='Берегите себя и близких и поддерживайте общение онлайн!')
+
+
+@bot.callback_query_handler(func=lambda call: call.data in ['yes', 'no'])
+def subscribe_or_not(call):
+    if call.data == 'yes':
+        subscribe(call.from_user.id)
+        bot.send_message(chat_id=call.from_user.id, text='Отлично!\nНапишу вам завтра')
+    elif call.data == 'no':
+        unsubscribe(call.from_user.id)
+        bot.send_message(chat_id=call.from_user.id, text='На какое время ставить паузу? Укажите количество встреч.')
+
+
+def send_remind(call):
+    bot.send_message(chat_id=call.from_user.id, text='Уже середина недели, напишите своему партнеру, если вдруг забыли')
+
+
+def send():
     pairs = create_pairs()
     print(pairs)
     for pair in pairs:
         print(pair[0], pair[1])
         try:
             telegram_id_0, telegram_id_1 = get_telegram_id(pair[0]), get_telegram_id(pair[1])
-            print(telegram_id_0, telegram_id_1)
             model_0, model_1 = get_user_info(telegram_id=telegram_id_0), get_user_info(telegram_id=telegram_id_1)
-            print(model_0, model_1)
 
             bot.send_message(chat_id=telegram_id_0, text='Привет!\nВаша пара на эту неделю:')
             time.sleep(0.5)
@@ -235,6 +258,7 @@ def send(message):
             bot.send_message(chat_id=telegram_id_0, text=f'{model_1.name}, {model_1.company}\n'
                                                          f'Могу быть полезен: {model_1.usefulness}\n'
                                                          f'Я ищу: {model_1.interests}')
+            create_meeting(user_telegram_id=telegram_id_0, partner_telegram_id=telegram_id_1)
 
             bot.send_message(chat_id=telegram_id_1, text='Привет!\nВаша пара на эту неделю:')
             time.sleep(0.5)
@@ -243,6 +267,7 @@ def send(message):
             bot.send_message(chat_id=telegram_id_1, text=f'{model_0.name}, {model_0.company}\n'
                                                          f'Могу быть полезен: {model_0.usefulness}\n'
                                                          f'Я ищу: {model_0.interests}')
+            create_meeting(user_telegram_id=telegram_id_1, partner_telegram_id=telegram_id_0)
         except Exception as e:
             print(e)
         time.sleep(3)

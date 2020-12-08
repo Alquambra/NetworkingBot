@@ -3,7 +3,7 @@
 
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, VARCHAR, String, LargeBinary, BOOLEAN, ForeignKey
+from sqlalchemy import Column, Integer, VARCHAR, String, LargeBinary, BOOLEAN, ForeignKey, DATETIME
 from settings import engine
 import numpy as np
 
@@ -24,19 +24,27 @@ class User(Base):
     interests = Column(VARCHAR, nullable=True)
     usefulness = Column(VARCHAR, nullable=True)
     subscribed = Column(BOOLEAN, default=False)
+    meetings_from = relationship('Meeting', backref='user')
+    meetings_with = relationship('Meeting', backref='partner')
 
     def __repr__(self):
         return f'<User(telegram_id="{self.telegram_id}">'
-
-
 
 
 class Meeting(Base):
     __tablename__ = 'meeting'
 
     id = Column(Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
-    user_tgid = Column(Integer, ForeignKey('user.telegram_id', ondelete='CASCADE'), nullable=False)
-    partner_tgid = Column(Integer, ForeignKey('user.telegram_id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.telegram_id', ondelete='CASCADE'), nullable=False)
+    partner_id = Column(Integer, nullable=False)
+    # partner_id = Column(Integer, ForeignKey('user.telegram_id', ondelete='CASCADE'), nullable=False)
+    message_date = Column(DATETIME, nullable=True)
+    status = Column(BOOLEAN, default=False)
+    date = Column(DATETIME, nullable=True)
+    opinion = Column(String(128), nullable=True)
+
+    def __repr__(self):
+        return f'<Meeting(user_tgid="{self.user_id}, partner_tgid={self.partner_id}">'
 
 
 def create_user_in_db(telegram_id):
@@ -44,10 +52,10 @@ def create_user_in_db(telegram_id):
         user = User(telegram_id=telegram_id)
         session.add(user)
         session.commit()
-        session.close()
     except Exception as e:
         session.rollback()
         print(e)
+    session.close()
 
 
 def change_photo(telegram_id, photo):
@@ -56,8 +64,8 @@ def change_photo(telegram_id, photo):
         u.photo = photo
         session.commit()
     except Exception as e:
-        session.rollback()
         print(e)
+    session.close()
 
 
 def change_name(telegram_id, name):
@@ -69,6 +77,7 @@ def change_name(telegram_id, name):
     except Exception as e:
         session.rollback()
         print(e)
+    session.close()
 
 
 def change_company(telegram_id, company):
@@ -80,6 +89,7 @@ def change_company(telegram_id, company):
     except Exception as e:
         session.rollback()
         print(e)
+    session.close()
 
 
 def change_interests(telegram_id, interests):
@@ -91,6 +101,7 @@ def change_interests(telegram_id, interests):
     except Exception as e:
         session.rollback()
         print(e)
+    session.close()
 
 
 def change_usefulness(telegram_id, usefulness):
@@ -102,6 +113,7 @@ def change_usefulness(telegram_id, usefulness):
     except Exception as e:
         session.rollback()
         print(e)
+    session.close()
 
 
 def subscribe(telegram_id):
@@ -112,59 +124,83 @@ def subscribe(telegram_id):
     except Exception as e:
         session.rollback()
         print(e)
+    session.close()
+
+
+def unsubscribe(telegram_id):
+    try:
+        u = session.query(User).filter_by(telegram_id=telegram_id).first()
+        u.subscribed = False
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        print(e)
+    session.close()
 
 
 def get_user_info(telegram_id):
     try:
         u = session.query(User).filter_by(telegram_id=telegram_id).first()
-        session.rollback()
         return u
     except Exception as e:
         session.rollback()
         print(e)
+    session.close()
 
 
 def check_fields_filled(telegram_id):
     try:
         u = session.query(User).filter_by(telegram_id=telegram_id).first()
         fields_filled = False if None in [i[1] for i in u.__dict__.items()] else True
-        session.rollback()
         return fields_filled
     except Exception as e:
         session.rollback()
         print(e)
+    session.close()
 
 
 def get_all_users():
     try:
         u = session.query(User).all()
-        session.rollback()
         return u
     except Exception as e:
         session.rollback()
         print(e)
+    session.close()
 
 
 def create_pairs():
     try:
-        u = session.query(User).all()
+        u = session.query(User).filter_by(subscribed=True).all()
         uids = [row.id for row in u]
+        print('uids', uids)
         pairs = np.random.choice(a=uids, size=(len(uids)//2, 2), replace=False)
-        session.rollback()
         return pairs
     except Exception as e:
         print(e)
         session.rollback()
+    session.close()
 
 
 def get_telegram_id(uid):
     try:
         u = session.query(User).filter_by(id=int(uid)).first().telegram_id
-        session.rollback()
         return u
     except Exception as e:
         print(e)
         session.rollback()
+    session.close()
+
+
+def create_meeting(user_telegram_id, partner_telegram_id):
+    try:
+        u = Meeting(user_id=user_telegram_id, partner_id=partner_telegram_id)
+        session.add(u)
+        session.commit()
+    except Exception as e:
+        print(e)
+        session.rollback()
+    session.close()
 
 
 Base.metadata.create_all(bind=engine)
