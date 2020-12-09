@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 # Python 3.8.6
+import datetime
 
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, VARCHAR, String, LargeBinary, BOOLEAN, ForeignKey, DATETIME
+from sqlalchemy import Column, Integer, VARCHAR, String, LargeBinary, BOOLEAN, ForeignKey, DateTime
 from settings import engine
 import numpy as np
+
 
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -15,7 +17,6 @@ Base = declarative_base()
 
 class User(Base):
     __tablename__ = 'user'
-
     id = Column(Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
     telegram_id = Column(Integer, nullable=False, unique=True)
     photo = Column(LargeBinary, nullable=True)
@@ -24,8 +25,6 @@ class User(Base):
     interests = Column(VARCHAR, nullable=True)
     usefulness = Column(VARCHAR, nullable=True)
     subscribed = Column(BOOLEAN, default=False)
-    meetings_from = relationship('Meeting', backref='user')
-    meetings_with = relationship('Meeting', backref='partner')
 
     def __repr__(self):
         return f'<User(telegram_id="{self.telegram_id}">'
@@ -33,15 +32,15 @@ class User(Base):
 
 class Meeting(Base):
     __tablename__ = 'meeting'
-
     id = Column(Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('user.telegram_id', ondelete='CASCADE'), nullable=False)
-    partner_id = Column(Integer, nullable=False)
-    # partner_id = Column(Integer, ForeignKey('user.telegram_id', ondelete='CASCADE'), nullable=False)
-    message_date = Column(DATETIME, nullable=True)
-    status = Column(BOOLEAN, default=False)
-    date = Column(DATETIME, nullable=True)
+    partner_id = Column(Integer, ForeignKey('user.telegram_id', ondelete='CASCADE'), nullable=False)
+    message_date = Column(DateTime, nullable=True)
+    status = Column(BOOLEAN, default=None)
+    date = Column(DateTime, nullable=True, default=datetime.datetime.utcnow)
     opinion = Column(String(128), nullable=True)
+    user = relationship('User', foreign_keys=[user_id])
+    partner = relationship('User', foreign_keys=[partner_id])
 
     def __repr__(self):
         return f'<Meeting(user_tgid="{self.user_id}, partner_tgid={self.partner_id}">'
@@ -209,6 +208,39 @@ def create_meeting(user_telegram_id, partner_telegram_id):
     except Exception as e:
         print(e)
         session.rollback()
+    session.close()
+
+
+def get_name_by_meeting(telegram_id):
+    try:
+        u = session.query(User, Meeting).join(Meeting, User.telegram_id == Meeting.partner_id).\
+            filter_by(user_id=telegram_id).order_by(Meeting.date.desc()).first()
+        name = u.User.name
+        return name
+    except Exception as e:
+        print(e)
+    session.close()
+
+
+def update_meeting_status(telegram_id, status: bool):
+    try:
+        u = session.query(Meeting).filter_by(user_id=telegram_id).order_by(Meeting.date.desc()).first()
+        u.status = status
+        u.message_date = datetime.datetime.utcnow()
+        session.commit()
+    except Exception as e:
+        print(e)
+        session.rollback()
+    session.close()
+
+
+def update_meeting_opinion(telegram_id, opinion):
+    try:
+        u = session.query(Meeting).filter_by(user_id=telegram_id).order_by(Meeting.date.desc()).first()
+        u.opinion = opinion
+        session.commit()
+    except Exception as e:
+        print(e)
     session.close()
 
 
