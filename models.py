@@ -16,6 +16,9 @@ Base = declarative_base()
 
 
 class User(Base):
+    """
+    Таблица с данными пользователя
+    """
     __tablename__ = 'user'
     id = Column(Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
     telegram_id = Column(Integer, nullable=False, unique=True)
@@ -31,6 +34,9 @@ class User(Base):
 
 
 class Meeting(Base):
+    """
+    Таблица с данными о встречах пользователей
+    """
     __tablename__ = 'meeting'
     id = Column(Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('user.telegram_id', ondelete='CASCADE'), nullable=False)
@@ -47,6 +53,9 @@ class Meeting(Base):
 
 
 def create_user_in_db(telegram_id):
+    """
+    Создание записи пользователя в бд user
+    """
     try:
         user = User(telegram_id=telegram_id)
         session.add(user)
@@ -57,7 +66,70 @@ def create_user_in_db(telegram_id):
     session.close()
 
 
+def check_photo(telegram_id):
+    """
+    Проверка заполнения поля "photo" в базе данных "user"
+    """
+    try:
+        u = session.query(User).filter_by(telegram_id=telegram_id).first().photo
+        return u
+    except Exception as e:
+        print(e)
+    session.close()
+
+
+def check_name(telegram_id):
+    """
+    Проверка заполнения поля "name" в базе данных "user"
+    """
+    try:
+        u = session.query(User).filter_by(telegram_id=telegram_id).first().name
+        return u
+    except Exception as e:
+        print(e)
+    session.close()
+
+
+def check_company(telegram_id):
+    """
+    Проверка заполнения поля "company" в базе данных "user"
+    """
+    try:
+        u = session.query(User).filter_by(telegram_id=telegram_id).first().company
+        return u
+    except Exception as e:
+        print(e)
+    session.close()
+
+
+def check_interests(telegram_id):
+    """
+    Проверка заполнения поля "interests" в базе данных "user"
+    """
+    try:
+        u = session.query(User).filter_by(telegram_id=telegram_id).first().interests
+        return u
+    except Exception as e:
+        print(e)
+    session.close()
+
+
+def check_usefulness(telegram_id):
+    """
+    Проверка заполнения поля "usefulness" в базе данных "user"
+    """
+    try:
+        u = session.query(User).filter_by(telegram_id=telegram_id).first().usefulness
+        return u
+    except Exception as e:
+        print(e)
+    session.close()
+
+
 def change_photo(telegram_id, photo):
+    """
+    Обновление поля "photo" в базе данных "user"
+    """
     try:
         u = session.query(User).filter_by(telegram_id=telegram_id).first()
         u.photo = photo
@@ -68,6 +140,9 @@ def change_photo(telegram_id, photo):
 
 
 def change_name(telegram_id, name):
+    """
+    Обновление поля "name" в базе данных "user"
+    """
     try:
         u = session.query(User).filter_by(telegram_id=telegram_id).first()
         print(u.id)
@@ -76,22 +151,32 @@ def change_name(telegram_id, name):
     except Exception as e:
         session.rollback()
         print(e)
-    session.close()
+    # session.close()
 
 
 def change_company(telegram_id, company):
+    """
+    Обновление поля "company" в базе данных "user"
+    """
     try:
         u = session.query(User).filter_by(telegram_id=telegram_id).first()
         print(u.id)
         u.company = company
+        session.add(u)
+        print(u.company)
+        print("ТОЧКА ОСТАНОВА")
         session.commit()
+        print('-----------')
     except Exception as e:
         session.rollback()
         print(e)
-    session.close()
+    # session.close()
 
 
 def change_interests(telegram_id, interests):
+    """
+    Обновление поля "interests" в базе данных "user"
+    """
     try:
         u = session.query(User).filter_by(telegram_id=telegram_id).first()
         print(u.id)
@@ -100,10 +185,13 @@ def change_interests(telegram_id, interests):
     except Exception as e:
         session.rollback()
         print(e)
-    session.close()
+    # session.close()
 
 
 def change_usefulness(telegram_id, usefulness):
+    """
+    Обновление поля "usefulness" в базе данных "user"
+    """
     try:
         u = session.query(User).filter_by(telegram_id=telegram_id).first()
         print(u.id)
@@ -112,10 +200,13 @@ def change_usefulness(telegram_id, usefulness):
     except Exception as e:
         session.rollback()
         print(e)
-    session.close()
+    # session.close()
 
 
 def subscribe(telegram_id):
+    """
+    Обновление поля "subscribe" на значение 1(True) в базе данных "user"
+    """
     try:
         u = session.query(User).filter_by(telegram_id=telegram_id).first()
         u.subscribed = True
@@ -127,6 +218,9 @@ def subscribe(telegram_id):
 
 
 def unsubscribe(telegram_id):
+    """
+    Обновление поля "subscribe" на значение 0(False) в базе данных "user"
+    """
     try:
         u = session.query(User).filter_by(telegram_id=telegram_id).first()
         u.subscribed = False
@@ -138,6 +232,9 @@ def unsubscribe(telegram_id):
 
 
 def subscribed(telegram_id):
+    """
+    Проверка значения поля "subscribe" в базе данных "user"
+    """
     try:
         u = session.query(User).filter_by(telegram_id=telegram_id).first().subscribed
         return u
@@ -147,6 +244,9 @@ def subscribed(telegram_id):
 
 
 def get_user_info(telegram_id):
+    """
+    Получение всей информации по конкретному пользователю
+    """
     try:
         u = session.query(User).filter_by(telegram_id=telegram_id).first()
         return u
@@ -157,6 +257,9 @@ def get_user_info(telegram_id):
 
 
 def check_fields_filled(telegram_id):
+    """
+    Проверка заполненности всех данных в таблице "user"
+    """
     try:
         u = session.query(User).filter_by(telegram_id=telegram_id).first()
         fields_filled = False if None in [i[1] for i in u.__dict__.items()] else True
@@ -168,6 +271,9 @@ def check_fields_filled(telegram_id):
 
 
 def get_all_users():
+    """
+    Получение всей информации из таблицы "user"
+    """
     try:
         u = session.query(User).all()
         return u
@@ -178,6 +284,9 @@ def get_all_users():
 
 
 def create_pairs():
+    """
+    Составление пар для тех пользователей, у которых поле subscribed = 1(True) таблицы "user"
+    """
     try:
         u = session.query(User).filter_by(subscribed=True).all()
         uids = [row.id for row in u]
@@ -191,6 +300,9 @@ def create_pairs():
 
 
 def get_telegram_id(uid):
+    """
+    Получение "telegram_id" пользователя по его "id" из таблицы "user"
+    """
     try:
         u = session.query(User).filter_by(id=int(uid)).first().telegram_id
         return u
@@ -201,6 +313,9 @@ def get_telegram_id(uid):
 
 
 def create_meeting(user_telegram_id, partner_telegram_id):
+    """
+    Создание записи в таблице "meeting"
+    """
     try:
         u = Meeting(user_id=user_telegram_id, partner_id=partner_telegram_id)
         session.add(u)
@@ -212,6 +327,9 @@ def create_meeting(user_telegram_id, partner_telegram_id):
 
 
 def get_name_by_meeting(telegram_id):
+    """
+    Получение "name" партнера пользователя из таблицы "meeting" с присоединением таблицы "user" по "partner_id"
+    """
     try:
         u = session.query(User, Meeting).join(Meeting, User.telegram_id == Meeting.partner_id).\
             filter_by(user_id=telegram_id).order_by(Meeting.date.desc()).first()
@@ -223,6 +341,9 @@ def get_name_by_meeting(telegram_id):
 
 
 def update_meeting_status(telegram_id, status: bool):
+    """
+    Обновление поля "status" таблицы "meeting"
+    """
     try:
         u = session.query(Meeting).filter_by(user_id=telegram_id).order_by(Meeting.date.desc()).first()
         u.status = status
@@ -235,6 +356,9 @@ def update_meeting_status(telegram_id, status: bool):
 
 
 def update_meeting_opinion(telegram_id, opinion):
+    """
+    Обновление поля "opinion" таблицы "meeting"
+    """
     try:
         u = session.query(Meeting).filter_by(user_id=telegram_id).order_by(Meeting.date.desc()).first()
         u.opinion = opinion

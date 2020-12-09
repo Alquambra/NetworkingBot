@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 # Python 3.8.6
-import time
-from pprint import pprint
 
+import time
 from telebot import types, AsyncTeleBot
 from settings import TOKEN
-from models import create_user_in_db, change_photo, change_name, change_company, change_interests, change_usefulness, \
+from models import create_user_in_db, check_photo, check_name, check_company, check_interests, check_usefulness,\
+    change_photo, change_name, change_company, change_interests, change_usefulness, \
     subscribe, unsubscribe, subscribed, get_user_info, check_fields_filled, create_pairs, get_telegram_id, \
     create_meeting, get_name_by_meeting, update_meeting_status, update_meeting_opinion
 import schedule
@@ -19,36 +19,67 @@ def buttons_inline(message):
     """
     Функция инициирует бота и добавляет кнопки с выбором поля для заполнения информации.
     """
+    try:
+        create_user_in_db(telegram_id=message.from_user.id)
+    except Exception as e:
+        print(e)
+    print('POINT -111')
     if not check_fields_filled(telegram_id=message.from_user.id):
+        print('POINT 0')
         markup = types.InlineKeyboardMarkup(row_width=1)
-        get_photo = types.InlineKeyboardButton(text='Фото', callback_data='add_photo')
-        get_name = types.InlineKeyboardButton(text='Имя и Фамилия', callback_data='add_name')
-        get_company = types.InlineKeyboardButton(text='Компания и позиция', callback_data='add_company')
-        get_interests = types.InlineKeyboardButton(text='Что я ищу', callback_data='add_interests')
-        get_usefulness = types.InlineKeyboardButton(text='Чем могу быть полезен', callback_data='add_usefulness')
+        photo_caption = 'Фото \u2705' if check_photo(telegram_id=message.from_user.id) else 'Фото \u274c'
+        name_caption = 'Имя и фамилия \u2705' if check_name(telegram_id=message.from_user.id)\
+            else 'Имя и фамилия \u274c'
+        company_caption = 'Компания и позиция \u2705' if check_company(telegram_id=message.from_user.id)\
+            else 'Компани и позиция \u274c'
+        interests_caption = 'Что я ищу \u2705' if check_interests(telegram_id=message.from_user.id)\
+            else 'Что я ищу \u274c'
+        usefulness_caption = 'Чем могу быть полезен \u2705' if check_usefulness(telegram_id=message.from_user.id)\
+            else 'Чем могу быть полезен \u274c'
+        print("POINT 1")
+        get_photo = types.InlineKeyboardButton(text=photo_caption, callback_data='add_photo')
+        get_name = types.InlineKeyboardButton(text=name_caption, callback_data='add_name')
+        get_company = types.InlineKeyboardButton(text=company_caption, callback_data='add_company')
+        get_interests = types.InlineKeyboardButton(text=interests_caption, callback_data='add_interests')
+        get_usefulness = types.InlineKeyboardButton(text=usefulness_caption, callback_data='add_usefulness')
         markup.add(get_photo, get_name, get_company, get_interests, get_usefulness)
+
+        print("POINT 2")
+
         start_message = 'Остались незаполненные поля'
         if message.text == '/start':
             start_message = 'Привет!\nДобавьте информацию о себе.\nМы рассылаем информацию каждую пятницу.'
-            create_user_in_db(telegram_id=message.from_user.id)
         bot.send_message(message.chat.id, start_message, reply_markup=markup)
 
     else:
-        markup = types.InlineKeyboardMarkup()
-        participate_net = types.InlineKeyboardButton(text='Учавствовать в нетворкинге',
-                                                     callback_data='participate_netw')
-        markup.add(participate_net)
-        bot.send_message(chat_id=message.chat.id, text='Учавствовать в нетворкинге', reply_markup=markup)
+        if message.text == '/start':
+            markup = types.InlineKeyboardMarkup()
+            participate_net = types.InlineKeyboardButton(text='Учавствовать в нетворкинге',
+                                                         callback_data='participate_netw')
+            markup.add(participate_net)
+            bot.send_message(chat_id=message.chat.id, text='Учавствовать в нетворкинге', reply_markup=markup)
 
 
 @bot.message_handler(commands=['edit'])
 def edit_profile(message):
+    """
+    Функция редактирования профиля. Отправляет пользовтелю кнопки с выбором поля для изменения.
+    """
     markup = types.InlineKeyboardMarkup(row_width=1)
-    get_photo = types.InlineKeyboardButton(text='Фото', callback_data='add_photo')
-    get_name = types.InlineKeyboardButton(text='Имя и Фамилия', callback_data='add_name')
-    get_company = types.InlineKeyboardButton(text='Компания и позиция', callback_data='add_company')
-    get_interests = types.InlineKeyboardButton(text='Что я ищу', callback_data='add_interests')
-    get_usefulness = types.InlineKeyboardButton(text='Чем могу быть полезен', callback_data='add_usefulness')
+    photo_caption = 'Фото \u2705' if check_photo(telegram_id=message.from_user.id) else 'Фото \u274c'
+    name_caption = 'Имя и фамилия \u2705' if check_name(telegram_id=message.from_user.id) \
+        else 'Имя и фамилия \u274c'
+    company_caption = 'Компания и позиция \u2705' if check_company(telegram_id=message.from_user.id) \
+        else 'Компани и позиция \u274c'
+    interests_caption = 'Что я ищу \u2705' if check_interests(telegram_id=message.from_user.id) else 'Что я ищу \u274c'
+    usefulness_caption = 'Чем могу быть полезен \u2705' if check_usefulness(telegram_id=message.from_user.id) \
+        else 'Чем могу быть полезен \u274c'
+
+    get_photo = types.InlineKeyboardButton(text=photo_caption, callback_data='add_photo')
+    get_name = types.InlineKeyboardButton(text=name_caption, callback_data='add_name')
+    get_company = types.InlineKeyboardButton(text=company_caption, callback_data='add_company')
+    get_interests = types.InlineKeyboardButton(text=interests_caption, callback_data='add_interests')
+    get_usefulness = types.InlineKeyboardButton(text=usefulness_caption, callback_data='add_usefulness')
     markup.add(get_photo, get_name, get_company, get_interests, get_usefulness)
     start_message = 'Выберите поле для редактирования'
     bot.send_message(message.chat.id, start_message, reply_markup=markup)
@@ -56,6 +87,9 @@ def edit_profile(message):
 
 @bot.message_handler(commands=['user_info'])
 def user_info(message):
+    """
+    Функция отправляет пользователю информацию о его профиле.
+    """
     model = get_user_info(telegram_id=message.from_user.id)
     print(model)
     bot.send_photo(chat_id=message.chat.id, photo=model.photo)
@@ -69,7 +103,7 @@ def user_info(message):
                                                             'add_interests', 'add_usefulness'])
 def handle(call):
     """
-    Функция обрабатывает события в связи с нажатием на кнопку
+    Функция обрабатывает события при редактировании профиля.
     """
     bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
     if call.data == 'add_photo':
@@ -95,9 +129,11 @@ def handle(call):
         take_from_profile = types.InlineKeyboardButton(text='Оставить имя', callback_data='name_from_profile')
         load_by_myself = types.InlineKeyboardButton(text='Изменить', callback_data='edit_name')
         markup.add(take_from_profile, load_by_myself)
-        print(call.from_user)
+        firstlast_name = call.from_user.first_name
+        if call.from_user.last_name:
+            firstlast_name += f' {call.from_user.last_name}'
         text = 'Как вас представлять другим участникам? ' \
-               f'В вашем профиле указано, что ваше имя - {call.from_user.first_name + call.from_user.last_name} ' \
+               f'В вашем профиле указано, что ваше имя - {firstlast_name} ' \
                'Я могу использовать его. Или пришлите мне свое имя текстом. '
         msg = bot.send_message(chat_id=call.message.chat.id, text=text, reply_markup=markup).wait()
         bot.register_next_step_handler(msg, get_name_from_user)
@@ -128,16 +164,24 @@ def handle(call):
 
 @bot.callback_query_handler(func=lambda call: call.data == 'photo_from_profile')
 def from_profile(call):
+    """
+    Функция загружает фотографию из аккаунта telegram пользователя
+    """
     bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
     profile_photos = bot.get_user_profile_photos(user_id=call.from_user.id).wait().photos
     avatar = bot.get_file(profile_photos[0][0].file_id).wait()
     downloaded = bot.download_file(avatar.file_path).wait()
     change_photo(telegram_id=call.from_user.id, photo=downloaded)
+    bot.send_message(chat_id=call.from_user.id, text='Выбрана фотография из вашего профиля')
+    bot.send_photo(chat_id=call.from_user.id, photo=downloaded)
     bot.register_next_step_handler(message=call.message, callback=buttons_inline)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'load_photo')
 def load_photo(call):
+    """
+    Функция обрабатывает кнопку загрузки фото и перенаправляет в функцию загрузки
+    """
     bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
     text = 'Загрузите свое фото, чтобы люди знали, как вы выглядите. ' \
            'Можно прислать уже сделанное фото, но я рекомендую сделать селфи прямо сейчас. ' \
@@ -150,12 +194,21 @@ def load_photo(call):
 
 @bot.callback_query_handler(func=lambda call: call.data == 'name_from_profile')
 def name_from_profile(call):
-    change_name(telegram_id=call.from_user.id, name=call.from_user.username)
+    """
+    Функция загружает имя и фамилию (если есть) из аккаунта telegram пользователя
+    """
+    firstlast_name = call.from_user.first_name
+    if call.from_user.last_name:
+        firstlast_name += f' {call.from_user.last_name}'
+    change_name(telegram_id=call.from_user.id, name=firstlast_name)
     bot.register_next_step_handler(message=call.message, callback=buttons_inline)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'edit_name')
 def edit_name(call):
+    """
+    Функция принимает строку от пользователя и записывает ее в бд как имя
+    """
     bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
     text = 'Введите свое имя.'
     msg = bot.send_message(call.message.chat.id, text).wait()
@@ -164,25 +217,40 @@ def edit_name(call):
 
 
 def get_photo_from_user(message):
+    """
+    Функция принимает фото от пользователя и загружает его в бд
+    """
     if message.content_type == 'photo':
         user_photo = bot.get_file(message.photo[0].file_id).wait()
         downloaded = bot.download_file(user_photo.file_path).wait()
+
         change_photo(telegram_id=message.from_user.id, photo=downloaded)
+        bot.send_message(chat_id=message.from_user.id, text='Выбрана фотография из вашего профиля')
+        bot.send_photo(chat_id=message.from_user.id, photo=downloaded)
+        time.sleep(1)
+        print('WORKS')
     else:
         bot.send_message(message.chat.id, 'Это не фото')
 
 
 def get_name_from_user(message):
-    print('user_name')
+    """
+    Функция принимает строку от пользователя и записывает ее как "Имя" в бд
+    """
     if message.content_type == 'text':
         user_name = message.text
-
+        print(user_name)
+        print("POINT NAME 1")
         change_name(telegram_id=message.from_user.id, name=user_name)
+        print("POINT NAME 2")
     else:
         bot.send_message(message.chat.id, 'Пришлите текст')
 
 
 def get_company_from_user(message):
+    """
+    Функция принимает строку от пользователя и записывает ее как "Компания и позиция" в бд
+    """
     if message.content_type == 'text':
         user_company = message.text
         change_company(telegram_id=message.from_user.id, company=user_company)
@@ -191,6 +259,9 @@ def get_company_from_user(message):
 
 
 def get_interests_from_user(message):
+    """
+    Функция принимает строку от пользователя и записывает ее как "Что я ищу" в бд
+    """
     if message.content_type == 'text':
         user_interests = message.text
         change_interests(telegram_id=message.from_user.id, interests=user_interests)
@@ -199,6 +270,9 @@ def get_interests_from_user(message):
 
 
 def get_usefulness_from_user(message):
+    """
+    Функция принимает строку от пользователя и записывает ее как "Чем могу быть полезен" в бд
+    """
     if message.content_type == 'text':
         user_usefulness = message.text
         change_usefulness(telegram_id=message.from_user.id, usefulness=user_usefulness)
@@ -208,8 +282,11 @@ def get_usefulness_from_user(message):
 
 @bot.callback_query_handler(func=lambda call: call.data == 'participate_netw')
 def clicked(call):
-    bot.send_message(chat_id=call.from_user.id, text='Вы учавствуете')
-
+    """
+    Функция обрабатывает кнопку "Участие в нетворкинге" и запускает цикл нетворкинга
+    """
+    subscribe(telegram_id=call.from_user.id)
+    bot.send_message(chat_id=call.from_user.id, text='Участие подтверждено')
     schedule.every().minute.at(':00').do(send_markup_yes_no, call)
     time.sleep(2)
     schedule.every().minute.at(':15').do(send)
@@ -224,6 +301,9 @@ def clicked(call):
 
 
 def send_markup_yes_no(call):
+    """
+    Функция спрашивает пользователя будет ли он учавствовать в следующем подборе.
+    """
     bot.send_message(chat_id=call.from_user.id, text='Привет!\nНаступил день подбора новых собеседников.')
     markup = types.InlineKeyboardMarkup(row_width=2)
     yes = types.InlineKeyboardButton(text='Да', callback_data='yes')
@@ -237,6 +317,9 @@ def send_markup_yes_no(call):
 
 @bot.callback_query_handler(func=lambda call: call.data in ['yes', 'no'])
 def subscribe_or_not(call):
+    """
+    Функция обрабатывает результат предыдущей функции. Ответ пользователя записывается в бд.
+    """
     if call.data == 'yes':
         subscribe(call.from_user.id)
         bot.send_message(chat_id=call.from_user.id, text='Отлично!\nНапишу вам завтра')
@@ -246,12 +329,18 @@ def subscribe_or_not(call):
 
 
 def send_remind(call):
+    """
+    Функция отправляет пользователю напоминание.
+    """
     if subscribed(telegram_id=call.from_user.id):
         bot.send_message(chat_id=call.from_user.id,
                          text='Уже середина недели, напишите своему партнеру, если вдруг забыли')
 
 
 def send():
+    """
+    Функция составляет пары участников и отправляет каждому участнику сообщение с информацией о его паре.
+    """
     pairs = create_pairs()
     for pair in pairs:
         telegram_id_0, telegram_id_1 = get_telegram_id(pair[0]), get_telegram_id(pair[1])
@@ -280,6 +369,9 @@ def send():
 
 
 def after_meeting(call):
+    """
+    Функция спрашивает пользователя о том, состоялась ли встреча.
+    """
     if subscribed(telegram_id=call.from_user.id):
         markup = types.InlineKeyboardMarkup(row_width=2)
         meeting_took_place = types.InlineKeyboardButton(text='Встреча состоялась', callback_data='meeting_took_place')
@@ -291,6 +383,10 @@ def after_meeting(call):
 
 @bot.callback_query_handler(func=lambda call: call.data in ['meeting_took_place', 'no_meeting'])
 def after_meeting_handler(call):
+    """
+    Функция обрабатывает ответ пользователя на предыдущую функцию. Предлагает ему новые варианты ответов
+    в зависимости от прошлого ответа
+    """
     if call.data == 'meeting_took_place':
         update_meeting_status(telegram_id=call.from_user.id, status=True)
         markup = types.InlineKeyboardMarkup(row_width=1)
@@ -318,6 +414,9 @@ def after_meeting_handler(call):
 @bot.callback_query_handler(func=lambda call: call.data in ['yes_option1', 'yes_option2', 'yes_option3', 'no_option1',
                                                             'no_option2', 'no_option3', 'no_option4'])
 def feedback(call):
+    """
+    Функция записывает в бд выбранный ответ пользователя
+    """
     pattern = r'(yes|no)_option(\d+)'
     option = re.findall(pattern=pattern, string=call.data)[0][1]
     option = int(*option) - 1
@@ -328,12 +427,17 @@ def feedback(call):
 
 @bot.callback_query_handler(func=lambda call: call.data == 'other_reason')
 def feedback_other_reason(call):
+    """
+    Функция обрабатывает вариант ответа "Другая причина".
+    """
     bot.send_message(chat_id=call.from_user.id, text='Какая?\nРасскажите, почему не удалось встретиться, '
                                                      'или напишите "пропустить", если не хотите ничего указывать.')
 
     @bot.message_handler(content_types=['text'])
     def get_reason_from_user(message):
-
+        """
+        Функция записывает ответ пользователя в бд.
+        """
         if message.text.lower() == 'пропустить':
             bot.send_message(chat_id=call.from_user.id, text='Ответ принят')
             update_meeting_opinion(telegram_id=message.from_user.id, opinion='No data')
