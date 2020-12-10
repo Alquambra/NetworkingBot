@@ -4,8 +4,8 @@
 import time
 from telebot import types, AsyncTeleBot
 from settings import TOKEN
-from models import create_user_in_db, check_photo, check_name, check_company, check_interests, check_usefulness,\
-    change_photo, change_name, change_company, change_interests, change_usefulness, \
+from models import user_in_db, create_user_in_db, check_photo, check_name, check_company, check_interests,\
+    check_usefulness, change_photo, change_name, change_company, change_interests, change_usefulness, \
     subscribe, unsubscribe, subscribed, get_user_info, check_fields_filled, create_pairs, get_telegram_id, \
     create_meeting, get_name_by_meeting, update_meeting_status, update_meeting_opinion
 import schedule
@@ -19,24 +19,24 @@ def buttons_inline(message):
     """
     Функция инициирует бота и добавляет кнопки с выбором поля для заполнения информации.
     """
-    try:
+    print('start_msg', message.text)
+    print('fields_filled', check_fields_filled(telegram_id=message.from_user.id))
+    if not user_in_db(telegram_id=message.from_user.id):
         create_user_in_db(telegram_id=message.from_user.id)
-    except Exception as e:
-        print(e)
-    print('POINT -111')
+
     if not check_fields_filled(telegram_id=message.from_user.id):
-        print('POINT 0')
+        u = get_user_info(telegram_id=message.from_user.id)
+        print(u.name, u.company, u.usefulness, u.interests)
         markup = types.InlineKeyboardMarkup(row_width=1)
-        photo_caption = 'Фото \u2705' if check_photo(telegram_id=message.from_user.id) else 'Фото \u274c'
-        name_caption = 'Имя и фамилия \u2705' if check_name(telegram_id=message.from_user.id)\
-            else 'Имя и фамилия \u274c'
-        company_caption = 'Компания и позиция \u2705' if check_company(telegram_id=message.from_user.id)\
-            else 'Компани и позиция \u274c'
-        interests_caption = 'Что я ищу \u2705' if check_interests(telegram_id=message.from_user.id)\
-            else 'Что я ищу \u274c'
-        usefulness_caption = 'Чем могу быть полезен \u2705' if check_usefulness(telegram_id=message.from_user.id)\
-            else 'Чем могу быть полезен \u274c'
-        print("POINT 1")
+        photo_caption = 'Фото \u2705' if check_photo(message.from_user.id) else 'Фото \u274c'
+        name_caption = 'Имя и фамилия \u2705' if check_name(message.from_user.id) else\
+            'Имя и фамилия \u274c'
+        company_caption = 'Компания и позиция \u2705' if check_company(message.from_user.id) else\
+            'Компани и позиция \u274c'
+        interests_caption = 'Что я ищу \u2705' if check_interests(message.from_user.id) else\
+            'Что я ищу \u274c'
+        usefulness_caption = 'Чем могу быть полезен \u2705' if check_usefulness(message.from_user.id) else\
+            'Чем могу быть полезен \u274c'
         get_photo = types.InlineKeyboardButton(text=photo_caption, callback_data='add_photo')
         get_name = types.InlineKeyboardButton(text=name_caption, callback_data='add_name')
         get_company = types.InlineKeyboardButton(text=company_caption, callback_data='add_company')
@@ -44,20 +44,18 @@ def buttons_inline(message):
         get_usefulness = types.InlineKeyboardButton(text=usefulness_caption, callback_data='add_usefulness')
         markup.add(get_photo, get_name, get_company, get_interests, get_usefulness)
 
-        print("POINT 2")
-
         start_message = 'Остались незаполненные поля'
         if message.text == '/start':
             start_message = 'Привет!\nДобавьте информацию о себе.\nМы рассылаем информацию каждую пятницу.'
         bot.send_message(message.chat.id, start_message, reply_markup=markup)
-
+        print('Перед else')
     else:
-        if message.text == '/start':
-            markup = types.InlineKeyboardMarkup()
-            participate_net = types.InlineKeyboardButton(text='Учавствовать в нетворкинге',
-                                                         callback_data='participate_netw')
-            markup.add(participate_net)
-            bot.send_message(chat_id=message.chat.id, text='Учавствовать в нетворкинге', reply_markup=markup)
+        print('После else', message.text)
+        markup = types.InlineKeyboardMarkup()
+        participate_net = types.InlineKeyboardButton(text='Учавствовать в нетворкинге',
+                                                     callback_data='participate_netw')
+        markup.add(participate_net)
+        bot.send_message(chat_id=message.chat.id, text='Учавствовать в нетворкинге', reply_markup=markup)
 
 
 @bot.message_handler(commands=['edit'])
@@ -65,15 +63,13 @@ def edit_profile(message):
     """
     Функция редактирования профиля. Отправляет пользовтелю кнопки с выбором поля для изменения.
     """
+    u = get_user_info(telegram_id=message.from_user.id)
     markup = types.InlineKeyboardMarkup(row_width=1)
-    photo_caption = 'Фото \u2705' if check_photo(telegram_id=message.from_user.id) else 'Фото \u274c'
-    name_caption = 'Имя и фамилия \u2705' if check_name(telegram_id=message.from_user.id) \
-        else 'Имя и фамилия \u274c'
-    company_caption = 'Компания и позиция \u2705' if check_company(telegram_id=message.from_user.id) \
-        else 'Компани и позиция \u274c'
-    interests_caption = 'Что я ищу \u2705' if check_interests(telegram_id=message.from_user.id) else 'Что я ищу \u274c'
-    usefulness_caption = 'Чем могу быть полезен \u2705' if check_usefulness(telegram_id=message.from_user.id) \
-        else 'Чем могу быть полезен \u274c'
+    photo_caption = 'Фото \u2705' if u.photo else 'Фото \u274c'
+    name_caption = 'Имя и фамилия \u2705' if u.name else 'Имя и фамилия \u274c'
+    company_caption = 'Компания и позиция \u2705' if u.company else 'Компани и позиция \u274c'
+    interests_caption = 'Что я ищу \u2705' if u.interests else 'Что я ищу \u274c'
+    usefulness_caption = 'Чем могу быть полезен \u2705' if u.usefulness else 'Чем могу быть полезен \u274c'
 
     get_photo = types.InlineKeyboardButton(text=photo_caption, callback_data='add_photo')
     get_name = types.InlineKeyboardButton(text=name_caption, callback_data='add_name')
@@ -91,7 +87,6 @@ def user_info(message):
     Функция отправляет пользователю информацию о его профиле.
     """
     model = get_user_info(telegram_id=message.from_user.id)
-    print(model)
     bot.send_photo(chat_id=message.chat.id, photo=model.photo)
     bot.send_message(chat_id=message.chat.id, text='Информация о профиле:\n'
                                                    f'{model.name}, {model.company}\n'
@@ -105,9 +100,9 @@ def handle(call):
     """
     Функция обрабатывает события при редактировании профиля.
     """
-    bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
+    # bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
     if call.data == 'add_photo':
-        bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
+        # bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
         profile_photos = bot.get_user_profile_photos(user_id=call.from_user.id, limit=1).wait().photos
         if profile_photos:
             markup = types.InlineKeyboardMarkup(row_width=2)
@@ -116,6 +111,7 @@ def handle(call):
             markup.add(take_from_profile, load_by_myself)
             text = 'В вашем профиле уже есть фото. Нажмите "Из профиля" и я возьму его.'
             bot.send_message(chat_id=call.message.chat.id, text=text, reply_markup=markup)
+
         else:
             text = 'Загрузите свое фото, чтобы люди знали, как вы выглядите. ' \
                    'Можно прислать уже сделанное фото, но я рекомендую сделать селфи прямо сейчас. ' \
@@ -124,7 +120,7 @@ def handle(call):
             msg = bot.send_message(call.message.chat.id, text).wait()
             bot.register_next_step_handler(msg, get_photo_from_user)
     elif call.data == 'add_name':
-        bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
+        # bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
         markup = types.InlineKeyboardMarkup(row_width=2)
         take_from_profile = types.InlineKeyboardButton(text='Оставить имя', callback_data='name_from_profile')
         load_by_myself = types.InlineKeyboardButton(text='Изменить', callback_data='edit_name')
@@ -135,8 +131,9 @@ def handle(call):
         text = 'Как вас представлять другим участникам? ' \
                f'В вашем профиле указано, что ваше имя - {firstlast_name} ' \
                'Я могу использовать его. Или пришлите мне свое имя текстом. '
-        msg = bot.send_message(chat_id=call.message.chat.id, text=text, reply_markup=markup).wait()
-        bot.register_next_step_handler(msg, get_name_from_user)
+        bot.send_message(chat_id=call.message.chat.id, text=text, reply_markup=markup).wait()
+        # bot.register_next_step_handler(msg, get_name_from_user)
+
     elif call.data == 'add_company':
         bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
 
@@ -145,6 +142,7 @@ def handle(call):
                'Например, "Директор в "ООО Палехче".'
         msg = bot.send_message(call.message.chat.id, text).wait()
         bot.register_next_step_handler(msg, get_company_from_user)
+
     elif call.data == 'add_interests':
         bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
 
@@ -153,6 +151,7 @@ def handle(call):
                'возможна ли медицина в условиях невесомости".'
         msg = bot.send_message(call.message.chat.id, text).wait()
         bot.register_next_step_handler(msg, get_interests_from_user)
+
     elif call.data == 'add_usefulness':
         bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
 
@@ -172,9 +171,11 @@ def from_profile(call):
     avatar = bot.get_file(profile_photos[0][0].file_id).wait()
     downloaded = bot.download_file(avatar.file_path).wait()
     change_photo(telegram_id=call.from_user.id, photo=downloaded)
-    bot.send_message(chat_id=call.from_user.id, text='Выбрана фотография из вашего профиля')
+    msg = bot.send_message(chat_id=call.from_user.id, text='Выбрана фотография из вашего профиля').wait()
     bot.send_photo(chat_id=call.from_user.id, photo=downloaded)
-    bot.register_next_step_handler(message=call.message, callback=buttons_inline)
+    print('---1---')
+    bot.register_next_step_handler(message=msg, callback=buttons_inline)
+    print('---2---')
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'load_photo')
@@ -189,7 +190,6 @@ def load_photo(call):
            'Отправьте свое фото прямо сюда.'
     msg = bot.send_message(call.message.chat.id, text).wait()
     bot.register_next_step_handler(msg, get_photo_from_user)
-    bot.register_next_step_handler(message=call.message, callback=buttons_inline)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'name_from_profile')
@@ -197,11 +197,17 @@ def name_from_profile(call):
     """
     Функция загружает имя и фамилию (если есть) из аккаунта telegram пользователя
     """
+    bot.clear_step_handler(message=call.message)
     firstlast_name = call.from_user.first_name
     if call.from_user.last_name:
         firstlast_name += f' {call.from_user.last_name}'
-    change_name(telegram_id=call.from_user.id, name=firstlast_name)
-    bot.register_next_step_handler(message=call.message, callback=buttons_inline)
+
+    print(firstlast_name)
+    # change_name(telegram_id=call.from_user.id, name=firstlast_name)
+    print(call.message.text)
+    msg = bot.send_message(chat_id=call.from_user.id, text='Изменения приняты').wait()
+    print(msg.text)
+    bot.register_next_step_handler(message=msg, callback=buttons_inline)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'edit_name')
@@ -209,9 +215,9 @@ def edit_name(call):
     """
     Функция принимает строку от пользователя и записывает ее в бд как имя
     """
+
     bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
-    text = 'Введите свое имя.'
-    msg = bot.send_message(call.message.chat.id, text).wait()
+    msg = bot.send_message(chat_id=call.message.chat.id, text='Введите свое имя').wait()
     bot.register_next_step_handler(msg, get_name_from_user)
     bot.register_next_step_handler(message=call.message, callback=buttons_inline)
 
@@ -225,10 +231,8 @@ def get_photo_from_user(message):
         downloaded = bot.download_file(user_photo.file_path).wait()
 
         change_photo(telegram_id=message.from_user.id, photo=downloaded)
-        bot.send_message(chat_id=message.from_user.id, text='Выбрана фотография из вашего профиля')
-        bot.send_photo(chat_id=message.from_user.id, photo=downloaded)
+        bot.send_message(chat_id=message.from_user.id, text='Фотография загружена')
         time.sleep(1)
-        print('WORKS')
     else:
         bot.send_message(message.chat.id, 'Это не фото')
 
