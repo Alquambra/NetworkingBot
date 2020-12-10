@@ -202,12 +202,10 @@ def name_from_profile(call):
     if call.from_user.last_name:
         firstlast_name += f' {call.from_user.last_name}'
 
-    print(firstlast_name)
-    # change_name(telegram_id=call.from_user.id, name=firstlast_name)
-    print(call.message.text)
-    msg = bot.send_message(chat_id=call.from_user.id, text='Изменения приняты').wait()
-    print(msg.text)
-    bot.register_next_step_handler(message=msg, callback=buttons_inline)
+    change_name(telegram_id=call.from_user.id, name=firstlast_name)
+    bot.send_message(chat_id=call.from_user.id, text='Изменения приняты').wait()
+    print(call)
+    buttons_inline(message=call.message)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'edit_name')
@@ -221,6 +219,10 @@ def edit_name(call):
     bot.register_next_step_handler(msg, get_name_from_user)
     bot.register_next_step_handler(message=call.message, callback=buttons_inline)
 
+
+@bot.callback_query_handler(func=lambda call: call.data =='continue')
+def continue_editing(call):
+    buttons_inline(call.message)
 
 def get_photo_from_user(message):
     """
