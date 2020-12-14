@@ -2,7 +2,7 @@ import time
 from telebot import types
 import schedule
 from models import number_of_pass_meetings, reduce_pass_meetings_by_one, get_pairs, get_user_info, get_link_by_meeting, \
-    create_meeting, subscribed, get_name_by_meeting, get_all_subscribed_users, unsubscribe
+    create_meeting, subscribed, get_name_by_meeting, get_all_subscribed_users, unsubscribe, get_all_participated_users
 from main import bot
 from settings import debug_with_thread, error_with_thread
 
@@ -11,7 +11,7 @@ from settings import debug_with_thread, error_with_thread
 
 
 def func1(bot):
-    users = get_all_subscribed_users()
+    users = get_all_participated_users()
     uids = [user.telegram_id for user in users]
 
     for uid in uids:
@@ -108,6 +108,7 @@ def check_meeting_status(bot):
 
 
 print('Run')
+schedule.every().hour.at(':00' or ':04')
 schedule.every().minute.at(':00').do(func1, bot)
 schedule.every().minute.at(':15').do(func2, bot)
 schedule.every().minute.at(':30').do(func3, bot)

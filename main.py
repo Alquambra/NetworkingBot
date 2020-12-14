@@ -7,7 +7,7 @@ from settings import TOKEN
 from models import user_in_db, create_user_in_db, change_photo, change_name, change_company, change_interests, \
     change_usefulness, subscribe, unsubscribe, subscribed, get_user_info, check_fields_filled, get_pairs, \
     get_name_by_meeting, update_meeting_status, update_meeting_opinion, number_of_pass_meetings, \
-    reduce_pass_meetings_by_one, increase_pass_meetings_by_user_input, create_meeting, get_link_by_meeting
+    reduce_pass_meetings_by_one, increase_pass_meetings_by_user_input, create_meeting, get_link_by_meeting, participate
 import schedule
 import re
 import os
@@ -337,6 +337,7 @@ def clicked(call):
     """
     subscribe(telegram_id=call.from_user.id)
     bot.send_message(chat_id=call.from_user.id, text='Участие подтверждено')
+    participate(telegram_id=call.from_user.id)
 #     schedule.every().minute.at(':00').do(send_markup_yes_no, call)
 #     time.sleep(1)
 #     schedule.every().minute.at(':15').do(send, call)

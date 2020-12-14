@@ -6,7 +6,7 @@ import logging
 from collections import defaultdict
 from sqlalchemy.orm import sessionmaker, relationship, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, VARCHAR, String, LargeBinary, BOOLEAN, ForeignKey, DateTime, func
+from sqlalchemy import Column, Integer, VARCHAR, String, LargeBinary, BOOLEAN, ForeignKey, DateTime
 from settings import engine, debug_with_thread, error_with_thread
 from bot_engine import create_pairs
 # from threading import Thread
@@ -33,6 +33,7 @@ class User(Base):
     usefulness = Column(VARCHAR, nullable=True)
     subscribed = Column(BOOLEAN, default=False)
     pass_meetings = Column(Integer, default=0)
+    participate = Column(BOOLEAN, default=False)
 
     def __repr__(self):
         return f'<User(telegram_id="{self.telegram_id}">'
@@ -411,7 +412,36 @@ def get_all_subscribed_users():
         session.rollback()
         print(e)
         error_with_thread('Здесь ошибка')
-    # session.close()
+    session.close()
+
+
+def participate(telegram_id):
+    """
+    Обновление поля "subscribe" на значение 1(True) в базе данных "user"
+    """
+    try:
+        session = Session()
+        u = session.query(User).filter(User.telegram_id == telegram_id).first()
+        u.participate = True
+        session.commit()
+        debug_with_thread(f'Пользователь {telegram_id} подписался на участие в нетворкинге')
+    except Exception as e:
+        session.rollback()
+        print(e)
+        error_with_thread('Здесь ошибка')
+    session.close()
+
+
+def get_all_participated_users():
+    try:
+        session = Session()
+        u = session.query(User).filter(User.participated == True).all()
+        return u
+    except Exception as e:
+        session.rollback()
+        print(e)
+        error_with_thread('Здесь ошибка')
+    session.close()
 
 
 def get_pairs():
