@@ -78,7 +78,7 @@ def create_user_in_db(telegram_id, link):
     """
     try:
         session = Session()
-        user = User(telegram_id=telegram_id, )
+        user = User(telegram_id=telegram_id, link=link)
         session.add(user)
         session.commit()
         debug_with_thread(f'Пользователь {telegram_id} добавлен')
@@ -391,6 +391,21 @@ def get_all_users():
     try:
         session = Session()
         u = session.query(User).all()
+        return u
+    except Exception as e:
+        session.rollback()
+        print(e)
+        error_with_thread('Здесь ошибка')
+    # session.close()
+
+
+def get_all_subscribed_users():
+    """
+    Получение всей информации из таблицы "user"
+    """
+    try:
+        session = Session()
+        u = session.query(User).filter(User.subscribed == True).all()
         return u
     except Exception as e:
         session.rollback()

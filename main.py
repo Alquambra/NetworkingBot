@@ -26,6 +26,7 @@ def buttons_inline(message):
     """
     if not user_in_db(telegram_id=message.from_user.id):
         create_user_in_db(telegram_id=message.from_user.id, link='@' + message.from_user.username)
+    print(message.from_user.username)
 
     if not check_fields_filled(telegram_id=message.from_user.id):
         u = get_user_info(telegram_id=message.from_user.id)

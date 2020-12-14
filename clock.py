@@ -2,18 +2,20 @@ import time
 from telebot import types
 import schedule
 from models import number_of_pass_meetings, reduce_pass_meetings_by_one, get_pairs, get_user_info, get_link_by_meeting, \
-    create_meeting, subscribed, get_name_by_meeting, get_all_subscribed_users
+    create_meeting, subscribed, get_name_by_meeting, get_all_subscribed_users, unsubscribe
+from main import bot
 from telebot import AsyncTeleBot
 from settings import TOKEN
 
 
-bot = AsyncTeleBot(TOKEN)
+# bot = AsyncTeleBot(TOKEN)
 
 
-def func1(bot):
+def func1(bot, uids):
     for uid in uids:
         try:
             if number_of_pass_meetings(uid) == 0:
+                unsubscribe(uid)
                 bot.send_message(chat_id=uid, text='Привет!\nНаступил день подбора новых собеседников.')
                 markup = types.InlineKeyboardMarkup(row_width=2)
                 yes = types.InlineKeyboardButton(text='Да', callback_data='yes')
@@ -57,7 +59,7 @@ def func2(bot):
             print('Не получилоь отправить сообщение', e)
 
 
-def func3(bot):
+def func3(bot, uids):
     for uid in uids:
         try:
             if subscribed(telegram_id=uid):
@@ -67,7 +69,7 @@ def func3(bot):
             print(e)
 
 
-def check_meeting_status(bot):
+def check_meeting_status(bot, uids):
     for uid in uids:
         try:
             if subscribed(telegram_id=uid):
@@ -94,10 +96,10 @@ print(uids)
 
 
 print('Run')
-schedule.every().minute.at(':00').do(func1, bot)
+schedule.every().minute.at(':00').do(func1, bot, uids)
 schedule.every().minute.at(':15').do(func2, bot)
-schedule.every().minute.at(':30').do(func3, bot)
-schedule.every().minute.at(':45').do(check_meeting_status, bot)
+schedule.every().minute.at(':30').do(func3, bot, uids)
+schedule.every().minute.at(':45').do(check_meeting_status, bot, uids)
 
 
 while True:

@@ -9,7 +9,9 @@ import logging.config
 
 
 TOKEN = '1431183102:AAF95F0wUZovGBGsgg4tePQzbw69Fef0d6o'
-engine = create_engine('postgres://mwlcvjxc:Ir0o3E7CvAKaLbckEjyH8J6YdKo48c1I@dumbo.db.elephantsql.com:5432/mwlcvjxc')
+# engine = create_engine('postgres://mwlcvjxc:Ir0o3E7CvAKaLbckEjyH8J6YdKo48c1I@dumbo.db.elephantsql.com:5432/mwlcvjxc')
+engine = create_engine('postgres://apaqfcniqplrtl:772da4c736d7b3ff509f0b3c3e108988ca5d90ed7d60cecfeca6207a431ec24b'
+                       '@ec2-54-76-215-139.eu-west-1.compute.amazonaws.com:5432/ddog5vctn9v5p6')
 
 log_config = {
     'version': 1,
