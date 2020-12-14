@@ -330,13 +330,13 @@ def get_usefulness_from_user(message):
         bot.send_message(message.chat.id, 'Пришлите текст')
 
 
-# @bot.callback_query_handler(func=lambda call: call.data == 'participate_netw')
-# def clicked(call):
-#     """
-#     Функция обрабатывает кнопку "Участие в нетворкинге" и запускает цикл нетворкинга
-#     """
-#     subscribe(telegram_id=call.from_user.id)
-#     bot.send_message(chat_id=call.from_user.id, text='Участие подтверждено')
+@bot.callback_query_handler(func=lambda call: call.data == 'participate_netw')
+def clicked(call):
+    """
+    Функция обрабатывает кнопку "Участие в нетворкинге" и запускает цикл нетворкинга
+    """
+    subscribe(telegram_id=call.from_user.id)
+    bot.send_message(chat_id=call.from_user.id, text='Участие подтверждено')
 #     schedule.every().minute.at(':00').do(send_markup_yes_no, call)
 #     time.sleep(1)
 #     schedule.every().minute.at(':15').do(send, call)
