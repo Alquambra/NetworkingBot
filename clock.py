@@ -5,14 +5,16 @@ from models import number_of_pass_meetings, reduce_pass_meetings_by_one, get_pai
     create_meeting, subscribed, get_name_by_meeting, get_all_subscribed_users, unsubscribe
 from main import bot
 from settings import debug_with_thread, error_with_thread
-from telebot import AsyncTeleBot
-from settings import TOKEN
+
 
 
 # bot = AsyncTeleBot(TOKEN)
 
 
 def func1(bot, uids):
+    users = get_all_subscribed_users()
+    uids = [user.telegram_id for user in users]
+
     for uid in uids:
         try:
             print(f'func1 {uid}')
@@ -67,6 +69,8 @@ def func2(bot):
 
 
 def func3(bot, uids):
+    users = get_all_subscribed_users()
+    uids = [user.telegram_id for user in users]
     for uid in uids:
         try:
             print(f'func3 {uid}')
@@ -79,6 +83,8 @@ def func3(bot, uids):
 
 
 def check_meeting_status(bot, uids):
+    users = get_all_subscribed_users()
+    uids = [user.telegram_id for user in users]
     for uid in uids:
         try:
             print(f'func4 {uid}')
@@ -102,16 +108,11 @@ def check_meeting_status(bot, uids):
             error_with_thread(f'func4 {e}')
 
 
-users = get_all_subscribed_users()
-uids = [user.telegram_id for user in users]
-print(uids)
-
-
 print('Run')
-schedule.every().minute.at(':00').do(func1, bot, uids)
+schedule.every().minute.at(':00').do(func1, bot)
 schedule.every().minute.at(':15').do(func2, bot)
-schedule.every().minute.at(':30').do(func3, bot, uids)
-schedule.every().minute.at(':45').do(check_meeting_status, bot, uids)
+schedule.every().minute.at(':30').do(func3, bot)
+schedule.every().minute.at(':45').do(check_meeting_status, bot)
 
 
 while True:
