@@ -1,8 +1,11 @@
 import time
+from datetime import datetime, timedelta
+
 from telebot import types
 import schedule
 from models import number_of_pass_meetings, reduce_pass_meetings_by_one, get_pairs, get_user_info, get_link_by_meeting, \
-    create_meeting, subscribed, get_name_by_meeting, get_all_subscribed_users, unsubscribe, get_all_participated_users
+    create_meeting, subscribed, get_name_by_meeting, get_all_subscribed_users, unsubscribe, get_all_participated_users, \
+    get_last_time_of_message
 from main import bot
 from settings import debug_with_thread, error_with_thread
 
@@ -72,10 +75,18 @@ def func3(bot):
     uids = [user.telegram_id for user in users]
     for uid in uids:
         try:
-            print(f'func3 {uid}')
-            debug_with_thread(f'func3 {uid}')
-            if subscribed(telegram_id=uid):
-                bot.send_message(chat_id=uid, text='Уже середина недели, напишите своему партнеру, если вдруг забыли')
+            time_of_message = get_last_time_of_message(telegram_id=uid)
+            print(time_of_message)
+            if time_of_message:
+                if datetime.now() - time_of_message < timedelta(minutes=4):
+
+                    print(f'func3 {uid}')
+                    debug_with_thread(f'func3 {uid}')
+                    if subscribed(telegram_id=uid):
+                        bot.send_message(
+                            chat_id=uid,
+                            text='Уже середина недели, напишите своему партнеру, если вдруг забыли'
+                        )
         except Exception as e:
             print(e)
             error_with_thread(f'func3 {e}')
@@ -86,22 +97,30 @@ def func4(bot):
     uids = [user.telegram_id for user in users]
     for uid in uids:
         try:
-            print(f'func4 {uid}')
-            debug_with_thread(f'func4 {uid}')
-            if subscribed(telegram_id=uid):
-                markup = types.InlineKeyboardMarkup(row_width=2)
-                meeting_took_place = types.InlineKeyboardButton(
-                    text='Встреча состоялась',
-                    callback_data='meeting_took_place'
-                )
-                no_meeting = types.InlineKeyboardButton(
-                    text='Не получилось встретиться',
-                    callback_data='no_meeting')
-                markup.add(meeting_took_place, no_meeting
-                           )
-                partner_name = get_name_by_meeting(telegram_id=uid)
-                if partner_name is not None:
-                    bot.send_message(chat_id=uid, text=f'Состоялась встреча с {partner_name}?', reply_markup=markup)
+            time_of_message = get_last_time_of_message(telegram_id=uid)
+            print(time_of_message)
+            if time_of_message:
+                if datetime.now() - time_of_message < timedelta(minutes=4):
+                    print(f'func4 {uid}')
+                    debug_with_thread(f'func4 {uid}')
+                    if subscribed(telegram_id=uid):
+                        markup = types.InlineKeyboardMarkup(row_width=2)
+                        meeting_took_place = types.InlineKeyboardButton(
+                            text='Встреча состоялась',
+                            callback_data='meeting_took_place'
+                        )
+                        no_meeting = types.InlineKeyboardButton(
+                            text='Не получилось встретиться',
+                            callback_data='no_meeting')
+                        markup.add(meeting_took_place, no_meeting
+                                   )
+                        partner_name = get_name_by_meeting(telegram_id=uid)
+                        if partner_name is not None:
+                            bot.send_message(
+                                chat_id=uid,
+                                text=f'Состоялась встреча с {partner_name}?',
+                                reply_markup=markup
+                            )
         except Exception as e:
             print(e)
             error_with_thread(f'func4 {e}')

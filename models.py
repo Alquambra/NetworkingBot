@@ -470,7 +470,7 @@ def get_pairs():
         print(e)
         session.rollback()
         error_with_thread('Здесь ошибка')
-    # session.close()
+    session.close()
 
 
 def get_telegram_id(uid):
@@ -485,7 +485,7 @@ def get_telegram_id(uid):
         print(e)
         session.rollback()
         error_with_thread('Здесь ошибка')
-    # session.close()
+    session.close()
 
 
 def create_meeting(user_telegram_id, partner_telegram_id):
@@ -502,7 +502,7 @@ def create_meeting(user_telegram_id, partner_telegram_id):
         print(e)
         session.rollback()
         error_with_thread('Здесь ошибка')
-    # session.close()
+    session.close()
 
 
 def get_name_by_meeting(telegram_id):
@@ -519,7 +519,7 @@ def get_name_by_meeting(telegram_id):
         session.rollback()
         print(e)
         error_with_thread('Здесь ошибка')
-    # session.close()
+    session.close()
 
 
 def get_link_by_meeting(telegram_id):
@@ -536,7 +536,7 @@ def get_link_by_meeting(telegram_id):
         session.rollback()
         print(e)
         error_with_thread('Здесь ошибка')
-    # session.close()
+    session.close()
 
 
 def update_meeting_status(telegram_id, status: bool):
@@ -554,7 +554,7 @@ def update_meeting_status(telegram_id, status: bool):
         print(e)
         session.rollback()
         error_with_thread('Здесь ошибка')
-    # session.close()
+    session.close()
 
 
 def update_meeting_opinion(telegram_id, opinion):
@@ -572,7 +572,18 @@ def update_meeting_opinion(telegram_id, opinion):
         session.rollback()
         print(e)
         error_with_thread('Здесь ошибка')
-    # session.close()
+    session.close()
+
+
+def get_last_time_of_message(telegram_id):
+    try:
+        session = Session()
+        u = session.query(Meeting).filter_by(user_meeting_id=telegram_id).order_by(Meeting.date_desc()).first()
+        return u.Meeting.date
+    except Exception as e:
+        session.rollback()
+        error_with_thread(f'Здесь ошибка {e}')
+    session.close()
 
 
 Base.metadata.create_all(bind=engine)
