@@ -4,6 +4,7 @@ import schedule
 from models import number_of_pass_meetings, reduce_pass_meetings_by_one, get_pairs, get_user_info, get_link_by_meeting, \
     create_meeting, subscribed, get_name_by_meeting, get_all_subscribed_users, unsubscribe
 from main import bot
+from settings import debug_with_thread, error_with_thread
 from telebot import AsyncTeleBot
 from settings import TOKEN
 
@@ -14,6 +15,7 @@ from settings import TOKEN
 def func1(bot, uids):
     for uid in uids:
         try:
+            debug_with_thread(f'func1 {uid}')
             if number_of_pass_meetings(uid) == 0:
                 unsubscribe(uid)
                 bot.send_message(chat_id=uid, text='Привет!\nНаступил день подбора новых собеседников.')
@@ -32,6 +34,7 @@ def func1(bot, uids):
                 bot.send_message(chat_id=uid, text='Ожидание')
                 reduce_pass_meetings_by_one(telegram_id=uid)
         except Exception as e:
+            error_with_thread(f'func1 {e}')
             print(e)
 
 
@@ -39,6 +42,7 @@ def func2(bot):
     pairs = get_pairs()
     for user_id, partner_id in pairs.items():
         try:
+            debug_with_thread(f'func2 {user_id, partner_id[0]}')
             if user_id and partner_id[0]:
                 link = get_link_by_meeting(telegram_id=user_id)
                 model = get_user_info(telegram_id=partner_id[0])
@@ -57,21 +61,24 @@ def func2(bot):
 
         except Exception as e:
             print('Не получилоь отправить сообщение', e)
+            error_with_thread(f'func2 {e}')
 
 
 def func3(bot, uids):
     for uid in uids:
         try:
+            debug_with_thread(f'func3 {uid}')
             if subscribed(telegram_id=uid):
-                bot.send_message(chat_id=uid,
-                                 text='Уже середина недели, напишите своему партнеру, если вдруг забыли')
+                bot.send_message(chat_id=uid, text='Уже середина недели, напишите своему партнеру, если вдруг забыли')
         except Exception as e:
             print(e)
+            error_with_thread(f'func3 {e}')
 
 
 def check_meeting_status(bot, uids):
     for uid in uids:
         try:
+            debug_with_thread(f'func4 {uid}')
             if subscribed(telegram_id=uid):
                 markup = types.InlineKeyboardMarkup(row_width=2)
                 meeting_took_place = types.InlineKeyboardButton(
@@ -88,6 +95,7 @@ def check_meeting_status(bot, uids):
                     bot.send_message(chat_id=uid, text=f'Состоялась встреча с {partner_name}?', reply_markup=markup)
         except Exception as e:
             print(e)
+            error_with_thread(f'func4 {e}')
 
 
 users = get_all_subscribed_users()
