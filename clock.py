@@ -1,15 +1,19 @@
 import time
 from telebot import types
-from main import bot
 import schedule
 from models import number_of_pass_meetings, reduce_pass_meetings_by_one, get_pairs, get_user_info, get_link_by_meeting, \
     create_meeting, subscribed, get_name_by_meeting, get_all_subscribed_users
+from telebot import AsyncTeleBot
+from settings import TOKEN
 
 
-def func1():
+bot = AsyncTeleBot(TOKEN)
+
+
+def func1(bot):
     for uid in uids:
         try:
-            if number_of_pass_meetings(uid):
+            if number_of_pass_meetings(uid) == 0:
                 bot.send_message(chat_id=uid, text='Привет!\nНаступил день подбора новых собеседников.')
                 markup = types.InlineKeyboardMarkup(row_width=2)
                 yes = types.InlineKeyboardButton(text='Да', callback_data='yes')
@@ -29,9 +33,9 @@ def func1():
             print(e)
 
 
-def func2():
+def func2(bot):
     pairs = get_pairs()
-    for user_id, partner_id in pairs:
+    for user_id, partner_id in pairs.items():
         try:
             if user_id and partner_id[0]:
                 link = get_link_by_meeting(telegram_id=user_id)
@@ -53,7 +57,7 @@ def func2():
             print('Не получилоь отправить сообщение', e)
 
 
-def func3():
+def func3(bot):
     for uid in uids:
         try:
             if subscribed(telegram_id=uid):
@@ -63,7 +67,7 @@ def func3():
             print(e)
 
 
-def check_meeting_status():
+def check_meeting_status(bot):
     for uid in uids:
         try:
             if subscribed(telegram_id=uid):
@@ -85,12 +89,15 @@ def check_meeting_status():
 
 
 users = get_all_subscribed_users()
-uids = [user.id for user in users]
+uids = [user.telegram_id for user in users]
+print(uids)
 
-schedule.every().minute.at(':00').do(func1)
-schedule.every().minute.at(':15').do(func2)
-schedule.every().minute.at(':30').do(func3)
-schedule.every().minute.at(':45').do(check_meeting_status)
+
+print('Run')
+schedule.every().minute.at(':00').do(func1, bot)
+schedule.every().minute.at(':15').do(func2, bot)
+schedule.every().minute.at(':30').do(func3, bot)
+schedule.every().minute.at(':45').do(check_meeting_status, bot)
 
 
 while True:
