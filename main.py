@@ -10,6 +10,11 @@ from models import user_in_db, create_user_in_db, change_photo, change_name, cha
     reduce_pass_meetings_by_one, increase_pass_meetings_by_user_input, create_meeting, get_link_by_meeting
 import schedule
 import re
+import os
+
+
+# tok = os.environ['TOKEN']
+
 
 bot = AsyncTeleBot(TOKEN)
 
@@ -324,46 +329,46 @@ def get_usefulness_from_user(message):
         bot.send_message(message.chat.id, 'Пришлите текст')
 
 
-@bot.callback_query_handler(func=lambda call: call.data == 'participate_netw')
-def clicked(call):
-    """
-    Функция обрабатывает кнопку "Участие в нетворкинге" и запускает цикл нетворкинга
-    """
-    subscribe(telegram_id=call.from_user.id)
-    bot.send_message(chat_id=call.from_user.id, text='Участие подтверждено')
-    schedule.every().minute.at(':00').do(send_markup_yes_no, call)
-    time.sleep(1)
-    schedule.every().minute.at(':15').do(send, call)
-    time.sleep(1)
-    schedule.every().minute.at(':30').do(send_remind, call)
-    time.sleep(1)
-    schedule.every().minute.at(':45').do(after_meeting, call)
+# @bot.callback_query_handler(func=lambda call: call.data == 'participate_netw')
+# def clicked(call):
+#     """
+#     Функция обрабатывает кнопку "Участие в нетворкинге" и запускает цикл нетворкинга
+#     """
+#     subscribe(telegram_id=call.from_user.id)
+#     bot.send_message(chat_id=call.from_user.id, text='Участие подтверждено')
+#     schedule.every().minute.at(':00').do(send_markup_yes_no, call)
+#     time.sleep(1)
+#     schedule.every().minute.at(':15').do(send, call)
+#     time.sleep(1)
+#     schedule.every().minute.at(':30').do(send_remind, call)
+#     time.sleep(1)
+#     schedule.every().minute.at(':45').do(after_meeting, call)
+#
+#     while True:
+#         schedule.run_pending()
+#         time.sleep(1)
 
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
 
-
-def send_markup_yes_no(call):
-    """
-    Функция спрашивает пользователя будет ли он учавствовать в следующем подборе.
-    """
-    if number_of_pass_meetings(telegram_id=call.from_user.id) == 0:
-        unsubscribe(call.from_user.id)
-        bot.send_message(chat_id=call.from_user.id, text='Привет!\nНаступил день подбора новых собеседников.')
-        markup = types.InlineKeyboardMarkup(row_width=2)
-        yes = types.InlineKeyboardButton(text='Да', callback_data='yes')
-        no = types.InlineKeyboardButton(text='Нет', callback_data='no')
-        markup.add(yes, no)
-        time.sleep(0.5)
-        bot.send_message(chat_id=call.from_user.id, text='Вас включать в список подбора на завтра?',
-                         reply_markup=markup)
-        time.sleep(0.5)
-        bot.send_message(chat_id=call.from_user.id, text='Берегите себя и близких и поддерживайте общение онлайн!')
-
-    else:
-        bot.send_message(chat_id=call.from_user.id, text='Ожидание')
-        reduce_pass_meetings_by_one(telegram_id=call.from_user.id)
+# def send_markup_yes_no(call):
+#     """
+#     Функция спрашивает пользователя будет ли он учавствовать в следующем подборе.
+#     """
+#     if number_of_pass_meetings(telegram_id=call.from_user.id) == 0:
+#         unsubscribe(call.from_user.id)
+#         bot.send_message(chat_id=call.from_user.id, text='Привет!\nНаступил день подбора новых собеседников.')
+#         markup = types.InlineKeyboardMarkup(row_width=2)
+#         yes = types.InlineKeyboardButton(text='Да', callback_data='yes')
+#         no = types.InlineKeyboardButton(text='Нет', callback_data='no')
+#         markup.add(yes, no)
+#         time.sleep(0.5)
+#         bot.send_message(chat_id=call.from_user.id, text='Вас включать в список подбора на завтра?',
+#                          reply_markup=markup)
+#         time.sleep(0.5)
+#         bot.send_message(chat_id=call.from_user.id, text='Берегите себя и близких и поддерживайте общение онлайн!')
+#
+#     else:
+#         bot.send_message(chat_id=call.from_user.id, text='Ожидание')
+#         reduce_pass_meetings_by_one(telegram_id=call.from_user.id)
 
 
 @bot.callback_query_handler(func=lambda call: call.data in ['yes', 'no'])
@@ -389,79 +394,79 @@ def increase_pass_meetings(message):
         bot.send_message(message.from_user.id, 'Необходимо ввести число')
 
 
-def send_remind(call):
-    """
-    Функция отправляет пользователю напоминание.
-    """
-    if subscribed(telegram_id=call.from_user.id):
-        bot.send_message(chat_id=call.from_user.id,
-                         text='Уже середина недели, напишите своему партнеру, если вдруг забыли')
+# def send_remind(call):
+#     """
+#     Функция отправляет пользователю напоминание.
+#     """
+#     if subscribed(telegram_id=call.from_user.id):
+#         bot.send_message(chat_id=call.from_user.id,
+#                          text='Уже середина недели, напишите своему партнеру, если вдруг забыли')
 
 
-def send(call):
-    """
-    Функция составляет пары участников и отправляет каждому участнику сообщение с информацией о его паре.
-    """
-    pairs = get_pairs()
-    print(f'\n\nПАРЫ {pairs}\n\n')
-    for user_id, partner_id in pairs.items():
-        print('userid and partnerid', user_id, partner_id[0])
-        try:
-            if user_id and partner_id[0]:
-                link = get_link_by_meeting(telegram_id=user_id)
-                model = get_user_info(telegram_id=partner_id[0])
-                bot.send_message(chat_id=user_id, text='Привет!\nВаша пара на эту неделю:')
-                time.sleep(0.5)
-                bot.send_photo(chat_id=user_id, photo=model.photo)
-                time.sleep(0.5)
-                bot.send_message(chat_id=user_id, text=f'{model.name}, {model.company}\n'
-                                                       f'Могу быть полезен: {model.usefulness}\n'
-                                                       f'Я ищу: {model.interests}\n'
-                                                       f'Ссылка {link}')
-                create_meeting(user_telegram_id=user_id, partner_telegram_id=partner_id[0])
-            elif user_id and not partner_id[0]:
-                # create_meeting(user_telegram_id=user_id, partner_telegram_id=None)
-                bot.send_message(chat_id=user_id, text='К сожалению для вас не нашлось пары:(')
-            # else:
-            #     continue
-    # for pair in pairs:
-    #     telegram_id_0, telegram_id_1 = get_telegram_id(pair[0]), get_telegram_id(pair[1])
-    #     model_0, model_1 = get_user_info(telegram_id=telegram_id_0), get_user_info(telegram_id=telegram_id_1)
-    #     try:
-    #         bot.send_message(chat_id=telegram_id_0, text='Привет!\nВаша пара на эту неделю:')
-    #         time.sleep(0.5)
-    #         bot.send_photo(chat_id=telegram_id_0, photo=model_1.photo)
-    #         time.sleep(0.5)
-    #         bot.send_message(chat_id=telegram_id_0, text=f'{model_1.name}, {model_1.company}\n'
-    #                                                      f'Могу быть полезен: {model_1.usefulness}\n'
-    #                                                      f'Я ищу: {model_1.interests}')
-    #
-    #         bot.send_message(chat_id=telegram_id_1, text='Привет!\nВаша пара на эту неделю:')
-    #         time.sleep(0.5)
-    #         bot.send_photo(chat_id=telegram_id_1, photo=model_0.photo)
-    #         time.sleep(0.5)
-    #         bot.send_message(chat_id=telegram_id_1, text=f'{model_0.name}, {model_0.company}\n'
-    #                                                      f'Могу быть полезен: {model_0.usefulness}\n'
-    #                                                      f'Я ищу: {model_0.interests}')
-    #         create_meeting(user_telegram_id=telegram_id_0, partner_telegram_id=telegram_id_1)
-    #         create_meeting(user_telegram_id=telegram_id_1, partner_telegram_id=telegram_id_0)
-        except Exception as e:
-            print('Не получилоь отправить сообщение', e)
-
-
-def after_meeting(call):
-    """
-    Функция спрашивает пользователя о том, состоялась ли встреча.
-    """
-    if subscribed(telegram_id=call.from_user.id):
-        markup = types.InlineKeyboardMarkup(row_width=2)
-        meeting_took_place = types.InlineKeyboardButton(text='Встреча состоялась', callback_data='meeting_took_place')
-        no_meeting = types.InlineKeyboardButton(text='Не получилось встретиться', callback_data='no_meeting')
-        markup.add(meeting_took_place, no_meeting)
-        partner_name = get_name_by_meeting(telegram_id=call.from_user.id)
-        if partner_name is not None:
-            bot.send_message(chat_id=call.from_user.id, text=f'Состоялась встреча с {partner_name}?',
-                             reply_markup=markup)
+# def send(call):
+#     """
+#     Функция составляет пары участников и отправляет каждому участнику сообщение с информацией о его паре.
+#     """
+#     pairs = get_pairs()
+#     print(f'\n\nПАРЫ {pairs}\n\n')
+#     for user_id, partner_id in pairs.items():
+#         print('userid and partnerid', user_id, partner_id[0])
+#         try:
+#             if user_id and partner_id[0]:
+#                 link = get_link_by_meeting(telegram_id=user_id)
+#                 model = get_user_info(telegram_id=partner_id[0])
+#                 bot.send_message(chat_id=user_id, text='Привет!\nВаша пара на эту неделю:')
+#                 time.sleep(0.5)
+#                 bot.send_photo(chat_id=user_id, photo=model.photo)
+#                 time.sleep(0.5)
+#                 bot.send_message(chat_id=user_id, text=f'{model.name}, {model.company}\n'
+#                                                        f'Могу быть полезен: {model.usefulness}\n'
+#                                                        f'Я ищу: {model.interests}\n'
+#                                                        f'Ссылка {link}')
+#                 create_meeting(user_telegram_id=user_id, partner_telegram_id=partner_id[0])
+#             elif user_id and not partner_id[0]:
+#                 # create_meeting(user_telegram_id=user_id, partner_telegram_id=None)
+#                 bot.send_message(chat_id=user_id, text='К сожалению для вас не нашлось пары:(')
+#             # else:
+#             #     continue
+#     # for pair in pairs:
+#     #     telegram_id_0, telegram_id_1 = get_telegram_id(pair[0]), get_telegram_id(pair[1])
+#     #     model_0, model_1 = get_user_info(telegram_id=telegram_id_0), get_user_info(telegram_id=telegram_id_1)
+#     #     try:
+#     #         bot.send_message(chat_id=telegram_id_0, text='Привет!\nВаша пара на эту неделю:')
+#     #         time.sleep(0.5)
+#     #         bot.send_photo(chat_id=telegram_id_0, photo=model_1.photo)
+#     #         time.sleep(0.5)
+#     #         bot.send_message(chat_id=telegram_id_0, text=f'{model_1.name}, {model_1.company}\n'
+#     #                                                      f'Могу быть полезен: {model_1.usefulness}\n'
+#     #                                                      f'Я ищу: {model_1.interests}')
+#     #
+#     #         bot.send_message(chat_id=telegram_id_1, text='Привет!\nВаша пара на эту неделю:')
+#     #         time.sleep(0.5)
+#     #         bot.send_photo(chat_id=telegram_id_1, photo=model_0.photo)
+#     #         time.sleep(0.5)
+#     #         bot.send_message(chat_id=telegram_id_1, text=f'{model_0.name}, {model_0.company}\n'
+#     #                                                      f'Могу быть полезен: {model_0.usefulness}\n'
+#     #                                                      f'Я ищу: {model_0.interests}')
+#     #         create_meeting(user_telegram_id=telegram_id_0, partner_telegram_id=telegram_id_1)
+#     #         create_meeting(user_telegram_id=telegram_id_1, partner_telegram_id=telegram_id_0)
+#         except Exception as e:
+#             print('Не получилоь отправить сообщение', e)
+#
+#
+# def after_meeting(call):
+#     """
+#     Функция спрашивает пользователя о том, состоялась ли встреча.
+#     """
+#     if subscribed(telegram_id=call.from_user.id):
+#         markup = types.InlineKeyboardMarkup(row_width=2)
+#         meeting_took_place = types.InlineKeyboardButton(text='Встреча состоялась', callback_data='meeting_took_place')
+#         no_meeting = types.InlineKeyboardButton(text='Не получилось встретиться', callback_data='no_meeting')
+#         markup.add(meeting_took_place, no_meeting)
+#         partner_name = get_name_by_meeting(telegram_id=call.from_user.id)
+#         if partner_name is not None:
+#             bot.send_message(chat_id=call.from_user.id, text=f'Состоялась встреча с {partner_name}?',
+#                              reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: call.data in ['meeting_took_place', 'no_meeting'])
