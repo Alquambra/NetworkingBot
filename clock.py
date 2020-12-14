@@ -7,11 +7,10 @@ from main import bot
 from settings import debug_with_thread, error_with_thread
 
 
-
 # bot = AsyncTeleBot(TOKEN)
 
 
-def func1(bot, uids):
+def func1(bot):
     users = get_all_subscribed_users()
     uids = [user.telegram_id for user in users]
 
@@ -68,7 +67,7 @@ def func2(bot):
             error_with_thread(f'func2 {e}')
 
 
-def func3(bot, uids):
+def func3(bot):
     users = get_all_subscribed_users()
     uids = [user.telegram_id for user in users]
     for uid in uids:
@@ -82,7 +81,7 @@ def func3(bot, uids):
             error_with_thread(f'func3 {e}')
 
 
-def check_meeting_status(bot, uids):
+def check_meeting_status(bot):
     users = get_all_subscribed_users()
     uids = [user.telegram_id for user in users]
     for uid in uids:
@@ -113,7 +112,6 @@ schedule.every().minute.at(':00').do(func1, bot)
 schedule.every().minute.at(':15').do(func2, bot)
 schedule.every().minute.at(':30').do(func3, bot)
 schedule.every().minute.at(':45').do(check_meeting_status, bot)
-
 
 while True:
     schedule.run_pending()
