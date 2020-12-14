@@ -435,7 +435,7 @@ def participate(telegram_id):
 def get_all_participated_users():
     try:
         session = Session()
-        u = session.query(User).filter(User.participated == True).all()
+        u = session.query(User).filter(User.participate == True).all()
         return u
     except Exception as e:
         session.rollback()
