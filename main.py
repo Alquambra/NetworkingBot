@@ -19,7 +19,6 @@ def buttons_inline(message):
     """
     Функция инициирует бота и добавляет кнопки с выбором поля для заполнения информации.
     """
-    time.sleep(1)
     if not user_in_db(telegram_id=message.from_user.id):
         create_user_in_db(telegram_id=message.from_user.id, link='@' + message.from_user.username)
 
