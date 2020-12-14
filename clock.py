@@ -81,7 +81,7 @@ def func3(bot):
             error_with_thread(f'func3 {e}')
 
 
-def check_meeting_status(bot):
+def func4(bot):
     users = get_all_subscribed_users()
     uids = [user.telegram_id for user in users]
     for uid in uids:
@@ -108,11 +108,76 @@ def check_meeting_status(bot):
 
 
 print('Run')
-schedule.every().hour.at(':00' or ':04')
-schedule.every().minute.at(':00').do(func1, bot)
-schedule.every().minute.at(':15').do(func2, bot)
-schedule.every().minute.at(':30').do(func3, bot)
-schedule.every().minute.at(':45').do(check_meeting_status, bot)
+schedule.every().hour.at(':00').do(func1, bot)
+schedule.every().hour.at(':01').do(func2, bot)
+schedule.every().hour.at(':02').do(func3, bot)
+schedule.every().hour.at(':03').do(func4, bot)
+schedule.every().hour.at(':04').do(func1, bot)
+schedule.every().hour.at(':05').do(func2, bot)
+schedule.every().hour.at(':06').do(func3, bot)
+schedule.every().hour.at(':07').do(func4, bot)
+schedule.every().hour.at(':08').do(func1, bot)
+schedule.every().hour.at(':09').do(func2, bot)
+schedule.every().hour.at(':10').do(func3, bot)
+schedule.every().hour.at(':11').do(func4, bot)
+schedule.every().hour.at(':12').do(func1, bot)
+schedule.every().hour.at(':13').do(func2, bot)
+schedule.every().hour.at(':14').do(func3, bot)
+schedule.every().hour.at(':15').do(func4, bot)
+schedule.every().hour.at(':16').do(func1, bot)
+schedule.every().hour.at(':17').do(func2, bot)
+schedule.every().hour.at(':18').do(func3, bot)
+schedule.every().hour.at(':19').do(func4, bot)
+schedule.every().hour.at(':20').do(func1, bot)
+schedule.every().hour.at(':21').do(func2, bot)
+schedule.every().hour.at(':22').do(func3, bot)
+schedule.every().hour.at(':23').do(func4, bot)
+schedule.every().hour.at(':24').do(func1, bot)
+schedule.every().hour.at(':25').do(func2, bot)
+schedule.every().hour.at(':26').do(func3, bot)
+schedule.every().hour.at(':27').do(func4, bot)
+schedule.every().hour.at(':28').do(func1, bot)
+schedule.every().hour.at(':29').do(func2, bot)
+schedule.every().hour.at(':30').do(func3, bot)
+schedule.every().hour.at(':31').do(func4, bot)
+schedule.every().hour.at(':32').do(func1, bot)
+schedule.every().hour.at(':33').do(func2, bot)
+schedule.every().hour.at(':34').do(func3, bot)
+schedule.every().hour.at(':35').do(func4, bot)
+schedule.every().hour.at(':36').do(func1, bot)
+schedule.every().hour.at(':37').do(func2, bot)
+schedule.every().hour.at(':38').do(func3, bot)
+schedule.every().hour.at(':39').do(func4, bot)
+schedule.every().hour.at(':40').do(func1, bot)
+schedule.every().hour.at(':41').do(func2, bot)
+schedule.every().hour.at(':42').do(func3, bot)
+schedule.every().hour.at(':43').do(func4, bot)
+schedule.every().hour.at(':44').do(func1, bot)
+schedule.every().hour.at(':45').do(func2, bot)
+schedule.every().hour.at(':46').do(func3, bot)
+schedule.every().hour.at(':47').do(func4, bot)
+schedule.every().hour.at(':48').do(func1, bot)
+schedule.every().hour.at(':49').do(func2, bot)
+schedule.every().hour.at(':50').do(func3, bot)
+schedule.every().hour.at(':51').do(func4, bot)
+schedule.every().hour.at(':52').do(func1, bot)
+schedule.every().hour.at(':53').do(func2, bot)
+schedule.every().hour.at(':54').do(func3, bot)
+schedule.every().hour.at(':55').do(func4, bot)
+schedule.every().hour.at(':56').do(func1, bot)
+schedule.every().hour.at(':57').do(func2, bot)
+schedule.every().hour.at(':58').do(func3, bot)
+schedule.every().hour.at(':59').do(func4, bot)
+
+
+
+
+
+
+# schedule.every().minute.at(':00').do(func1, bot)
+# schedule.every().minute.at(':15').do(func2, bot)
+# schedule.every().minute.at(':30').do(func3, bot)
+# schedule.every().minute.at(':45').do(func4, bot)
 
 while True:
     schedule.run_pending()
