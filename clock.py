@@ -15,6 +15,7 @@ from settings import TOKEN
 def func1(bot, uids):
     for uid in uids:
         try:
+            print(f'func1 {uid}')
             debug_with_thread(f'func1 {uid}')
             if number_of_pass_meetings(uid) == 0:
                 unsubscribe(uid)
@@ -42,6 +43,7 @@ def func2(bot):
     pairs = get_pairs()
     for user_id, partner_id in pairs.items():
         try:
+            print(f'func2 {user_id, partner_id[0]}')
             debug_with_thread(f'func2 {user_id, partner_id[0]}')
             if user_id and partner_id[0]:
                 link = get_link_by_meeting(telegram_id=user_id)
@@ -67,6 +69,7 @@ def func2(bot):
 def func3(bot, uids):
     for uid in uids:
         try:
+            print(f'func3 {uid}')
             debug_with_thread(f'func3 {uid}')
             if subscribed(telegram_id=uid):
                 bot.send_message(chat_id=uid, text='Уже середина недели, напишите своему партнеру, если вдруг забыли')
@@ -78,6 +81,7 @@ def func3(bot, uids):
 def check_meeting_status(bot, uids):
     for uid in uids:
         try:
+            print(f'func4 {uid}')
             debug_with_thread(f'func4 {uid}')
             if subscribed(telegram_id=uid):
                 markup = types.InlineKeyboardMarkup(row_width=2)
