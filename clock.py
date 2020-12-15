@@ -16,6 +16,7 @@ from settings import debug_with_thread, error_with_thread
 def func1(bot):
     users = get_all_participated_users()
     uids = [user.telegram_id if user else None for user in users]
+    print('func1', users, uids)
 
     for uid in uids:
         try:
@@ -73,6 +74,8 @@ def func2(bot):
 def func3(bot):
     users = get_all_subscribed_users()
     uids = [user.telegram_id if user else None for user in users]
+
+    print('func3', users, uids)
     for uid in uids:
         try:
             time_of_message = get_last_time_of_message(telegram_id=uid)
@@ -95,6 +98,7 @@ def func3(bot):
 def func4(bot):
     users = get_all_subscribed_users()
     uids = [user.telegram_id if user else None for user in users]
+    print('func4', users, uids)
     for uid in uids:
         try:
             time_of_message = get_last_time_of_message(telegram_id=uid)

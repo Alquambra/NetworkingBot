@@ -5,12 +5,10 @@ import time
 from telebot import types, AsyncTeleBot
 from settings import TOKEN
 from models import user_in_db, create_user_in_db, change_photo, change_name, change_company, change_interests, \
-    change_usefulness, subscribe, unsubscribe, subscribed, get_user_info, check_fields_filled, get_pairs, \
-    get_name_by_meeting, update_meeting_status, update_meeting_opinion, number_of_pass_meetings, \
-    reduce_pass_meetings_by_one, increase_pass_meetings_by_user_input, create_meeting, get_link_by_meeting, participate
-import schedule
+    change_usefulness, subscribe, unsubscribe, get_user_info, check_fields_filled, update_meeting_status,\
+    update_meeting_opinion, increase_pass_meetings_by_user_input, participate
 import re
-import os
+
 
 
 # tok = os.environ['TOKEN']
@@ -100,7 +98,7 @@ def handle(call):
     """
     bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
     if call.data == 'add_photo':
-        # bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
+        bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
         profile_photos = bot.get_user_profile_photos(user_id=call.from_user.id, limit=1).wait().photos
         if profile_photos:
             markup = types.InlineKeyboardMarkup(row_width=2)
@@ -118,7 +116,7 @@ def handle(call):
             msg = bot.send_message(call.message.chat.id, text).wait()
             bot.register_next_step_handler(msg, get_photo_from_user)
     elif call.data == 'add_name':
-        # bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
+        bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
         markup = types.InlineKeyboardMarkup(row_width=2)
         take_from_profile = types.InlineKeyboardButton(text='Оставить имя', callback_data='name_from_profile')
         load_by_myself = types.InlineKeyboardButton(text='Изменить', callback_data='edit_name')
@@ -171,7 +169,7 @@ def handle_edit(call):
         msg = bot.send_message(call.message.chat.id, text).wait()
         bot.register_next_step_handler(msg, get_photo_from_user)
     elif call.data == 'add_name(edit)':
-        # bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
+        bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
         msg = bot.send_message(chat_id=call.message.chat.id, text='Введите свое имя').wait()
         bot.register_next_step_handler(msg, get_name_from_user)
     elif call.data == 'add_company(edit)':
