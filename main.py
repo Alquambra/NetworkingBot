@@ -3,16 +3,15 @@
 
 import time
 from telebot import types, AsyncTeleBot
-from settings import TOKEN
 from models import user_in_db, create_user_in_db, change_photo, change_name, change_company, change_interests, \
-    change_usefulness, subscribe, unsubscribe, get_user_info, check_fields_filled, update_meeting_status,\
+    change_usefulness, subscribe, unsubscribe, get_user_info, check_fields_filled, update_meeting_status, \
     update_meeting_opinion, increase_pass_meetings_by_user_input, participate
 import re
 
-
-
-# tok = os.environ['TOKEN']
-
+try:
+    from settings import TOKEN
+except ImportError:
+    exit('DO cp settings.py.default settings.py and set token')
 
 bot = AsyncTeleBot(TOKEN)
 
@@ -336,6 +335,8 @@ def clicked(call):
     subscribe(telegram_id=call.from_user.id)
     bot.send_message(chat_id=call.from_user.id, text='Участие подтверждено')
     participate(telegram_id=call.from_user.id)
+
+
 #     schedule.every().minute.at(':00').do(send_markup_yes_no, call)
 #     time.sleep(1)
 #     schedule.every().minute.at(':15').do(send, call)

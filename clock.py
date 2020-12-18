@@ -1,16 +1,19 @@
+# -*- coding: utf-8 -*-
+# Python 3.8.6
+
 import time
 from datetime import datetime, timedelta
-
 from telebot import types
 import schedule
 from models import number_of_pass_meetings, reduce_pass_meetings_by_one, get_pairs, get_user_info, get_link_by_meeting, \
     create_meeting, subscribed, get_name_by_meeting, get_all_subscribed_users, unsubscribe, get_all_participated_users, \
     get_last_time_of_message
 from main import bot
-from settings import debug_with_thread, error_with_thread
 
-
-# bot = AsyncTeleBot(TOKEN)
+try:
+    from settings import engine, debug_with_thread, error_with_thread
+except ImportError:
+    exit('DO cp settings.py.default settings.py and set engine')
 
 
 def func1(bot):
@@ -191,11 +194,6 @@ schedule.every().hour.at(':56').do(func1, bot)
 schedule.every().hour.at(':57').do(func2, bot)
 schedule.every().hour.at(':58').do(func3, bot)
 schedule.every().hour.at(':59').do(func4, bot)
-
-
-
-
-
 
 # schedule.every().minute.at(':00').do(func1, bot)
 # schedule.every().minute.at(':15').do(func2, bot)

@@ -7,9 +7,13 @@ from collections import defaultdict
 from sqlalchemy.orm import sessionmaker, relationship, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, VARCHAR, String, LargeBinary, BOOLEAN, ForeignKey, DateTime
-from settings import engine, debug_with_thread, error_with_thread
 from bot_engine import create_pairs
 # from threading import Thread
+
+try:
+    from settings import engine, debug_with_thread, error_with_thread
+except ImportError:
+    exit('DO cp settings.py.default settings.py and set engine')
 
 
 Session = scoped_session(sessionmaker(bind=engine))
